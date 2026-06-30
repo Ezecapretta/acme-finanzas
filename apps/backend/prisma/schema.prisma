@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountCurrency {
+  ARS
+  USD
+}
+
+enum AccountType {
+  CASH
+  BANK
+}
+
+enum CheckStatus {
+  PENDING_PURCHASE
+  IN_PORTFOLIO
+  DELIVERED
+  DEPOSITED
+  REJECTED
+}
+
+enum TransactionType {
+  INCOME
+  OUTCOME
+  TRANSFER
+  FX_TRADE
+  CHECK_TRADE
+}
+
+enum TransactionCategory {
+  OPERATING_EXPENSE
+  SALARY
+  COMMISSION
+  INTEREST_INCOME
+  CAPITAL_CONTRIBUTION
+  PARTNER_WITHDRAWAL
+  CLIENT_FUNDING
+  CHECK_DEPOSIT
+  OPENING_BALANCE
+  OTHER
+}
+
+enum MovementType {
+  DEBIT
+  CREDIT
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+}
+
+model User {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @db.VarChar(255)
+  email         String   @unique @db.VarChar(255)
+  password_hash String   @db.VarChar(255)
+  role          UserRole @default(OPERATOR)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now()) @db.Timestamptz
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model Client {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @db.VarChar(255)
+  tax_id     String?  @db.VarChar(50)
+  email      String?  @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  source_checks      Check[]    @relation("SourceClient")
+  destination_checks Check[]    @relation("DestinationClient")
+  movements          Movement[]
+  box                Box?
+
+  @@map("clients")
+}
+
+model Box {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String          @db.VarChar(255)
+  client_id  String?         @unique @db.Uuid
+  is_active  Boolean         @default(true)
+  created_at DateTime        @default(now()) @db.Timestamptz
+  updated_at DateTime        @default(now()) @updatedAt @db.Timestamptz
+
+  client     Client?         @relation(fields: [client_id], references: [id])
+  movements  Movement[]
+
+  @@map("boxes")
+}
+
+model Check {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  check_number          String          @db.VarChar(100)
+  bank_name             String          @db.VarChar(255)
+  amount                Decimal         @db.Decimal(19, 4)
+  currency              AccountCurrency @default(ARS)
+  issue_date            DateTime        @db.Date
+  due_date              DateTime        @db.Date
+  status                CheckStatus     @default(PENDING_PURCHASE)
+  source_client_id      String?         @db.Uuid
+  destination_client_id String?         @db.Uuid
+  created_at            DateTime        @default(now()) @db.Timestamptz
+  updated_at            DateTime        @default(now()) @updatedAt @db.Timestamptz
+
+  source_client         Client?         @relation("SourceClient", fields: [source_client_id], references: [id])
+  destination_client    Client?         @relation("DestinationClient", fields: [destination_client_id], references: [id])
+  movements             Movement[]
+
+  @@map("checks")
+}
+
+model Transaction {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type           TransactionType
+  category       TransactionCategory @default(OTHER)
+  description    String              @db.Text
+  operation_date DateTime            @default(now()) @db.Timestamptz
+  exchange_rate  Decimal?            @db.Decimal(19, 4)
+  commission     Decimal?            @db.Decimal(19, 4)
+  is_reversed    Boolean             @default(false)
+  reversal_of    String?             @db.Uuid
+  created_by     String?             @db.Uuid
+  created_at     DateTime            @default(now()) @db.Timestamptz
+
+  user           User?           @relation(fields: [created_by], references: [id])
+  movements      Movement[]
+  reversalOf     Transaction?    @relation("TransactionReversal", fields: [reversal_of], references: [id])
+  reversals      Transaction[]   @relation("TransactionReversal")
+
+  @@map("transactions")
+}
+
+model Movement {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transaction_id String          @db.Uuid
+  box_id         String?         @db.Uuid
+  client_id      String?         @db.Uuid
+  check_id       String?         @db.Uuid
+  type           MovementType
+  amount         Decimal         @db.Decimal(19, 4)
+  currency       AccountCurrency
+  created_at     DateTime        @default(now()) @db.Timestamptz
+
+  transaction    Transaction     @relation(fields: [transaction_id], references: [id], onDelete: Restrict)
+  box            Box?            @relation(fields: [box_id], references: [id])
+  client         Client?         @relation(fields: [client_id], references: [id])
+  check          Check?          @relation(fields: [check_id], references: [id])
+
+  @@map("movements")
+}
