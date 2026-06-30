@@ -1,0 +1,15 @@
+{
+  "name": "acme-finanzas",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w @acme/backend",
+    "build:frontend": "npm run build -w frontend",
+    "build:backend": "npm run build -w @acme/backend"
+  }
+}
