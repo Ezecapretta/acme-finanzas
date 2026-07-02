@@ -9,6 +9,20 @@ cuenta.
 > Proyecto de portfolio. Los datos de cliente fueron anonimizados; la marca real
 > se reemplazó por el placeholder **Acme**.
 
+## Demo en vivo
+
+- **App:** [acme-finanzas-frontend.vercel.app](https://acme-finanzas-frontend.vercel.app)
+- **API:** [acme-finanzas-api.onrender.com/health](https://acme-finanzas-api.onrender.com/health)
+
+**Credenciales de acceso:**
+- Email: `admin@acme.com`
+- Password: `admin123`
+
+> El backend está en el plan free de Render, que apaga el servicio tras
+> ~15 min de inactividad. Si la app tarda en responder la primera vez (hasta
+> ~50s), es normal: el servidor se está reactivando. Los pedidos siguientes
+> son inmediatos.
+
 ## Stack
 
 | Capa | Tecnología |
