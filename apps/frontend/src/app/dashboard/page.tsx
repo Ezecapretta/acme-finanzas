@@ -3,31 +3,50 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/services/api';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid, Legend
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
+import { Card } from '@/components/ui/Card';
+import { KpiCard } from '@/components/ui/KpiCard';
+import { Badge, Pill, type Tone } from '@/components/ui/Badge';
 
-// ── Type labels ───────────────────────────────────────────────────────────
-const TX_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  INCOME:      { label: 'Ingreso',       color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  OUTCOME:     { label: 'Egreso',        color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20' },
-  FX_TRADE:    { label: 'C/V Dólares',   color: 'text-sky-400',     bg: 'bg-sky-500/10 border-sky-500/20' },
-  CHECK_TRADE: { label: 'C/V Cheques',   color: 'text-violet-400',  bg: 'bg-violet-500/10 border-violet-500/20' },
-  TRANSFER:    { label: 'Transferencia', color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
+// ── Metadatos de tipo de movimiento (badge + color de monto) ──────────────
+const TX_META: Record<string, { label: string; tone: Tone }> = {
+  INCOME:      { label: 'Ingreso',       tone: 'positive' },
+  OUTCOME:     { label: 'Egreso',        tone: 'negative' },
+  FX_TRADE:    { label: 'C/V USD',       tone: 'warn' },
+  CHECK_TRADE: { label: 'Cheque',        tone: 'accent' },
+  TRANSFER:    { label: 'Transferencia', tone: 'neutral' },
 };
+
+// ── DATOS DE DEMO (placeholder) ───────────────────────────────────────────
+// La API actual (/reports/daily-closing) sólo entrega flujo DIARIO de 30 días
+// y no hay endpoint de agregado por categoría. Estas dos constantes son datos
+// de ejemplo para el gráfico a 8 meses y el desglose por categoría; reemplazar
+// cuando el backend exponga esos datos. NO tocan la capa de datos.
+const DEMO_MONTHLY_CHART = [
+  { month: 'Nov', ingresos: 92,  egresos: 61 },
+  { month: 'Dic', ingresos: 104, egresos: 72 },
+  { month: 'Ene', ingresos: 88,  egresos: 65 },
+  { month: 'Feb', ingresos: 118, egresos: 79 },
+  { month: 'Mar', ingresos: 96,  egresos: 70 },
+  { month: 'Abr', ingresos: 132, egresos: 74 },
+  { month: 'May', ingresos: 110, egresos: 68 },
+  { month: 'Jun', ingresos: 128, egresos: 72 },
+];
+const DEMO_CATEGORIES = [
+  { name: 'Proveedores', pct: 38, amt: '$ 27,3M' },
+  { name: 'Sueldos',     pct: 24, amt: '$ 17,2M' },
+  { name: 'Impuestos',   pct: 16, amt: '$ 11,5M' },
+  { name: 'Servicios',   pct: 12, amt: '$ 8,6M' },
+  { name: 'Alquiler',    pct: 6,  amt: '$ 4,3M' },
+  { name: 'Otros',       pct: 4,  amt: '$ 2,9M' },
+];
+const CAT_MAX = Math.max(...DEMO_CATEGORIES.map(c => c.pct));
 
 interface DashboardData {
   date: string;
-  metrics: {
-    checksBalanceARS: number;
-    checksBalanceUSD: number;
-    checksInPortfolio: number;
-  };
-  treasuryStatus: Array<{
-    name: string;
-    closingBalance: { ARS: number; USD: number };
-    movementsToday: number;
-  }>;
+  metrics: { checksBalanceARS: number; checksBalanceUSD: number; checksInPortfolio: number };
+  treasuryStatus: Array<{ name: string; closingBalance: { ARS: number; USD: number }; movementsToday: number }>;
   recentTransactions: Array<{
     id: string;
     description: string;
@@ -40,15 +59,7 @@ interface DashboardData {
   chartData: Array<{ date: string; Ingresos: number; Egresos: number }>;
 }
 
-interface Check {
-  id: string;
-  check_number: string;
-  bank_name: string;
-  amount: number;
-  currency: string;
-  due_date: string;
-  source_client?: { name: string } | null;
-}
+interface Check { id: string; status: string; due_date: string; }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const fmt = (n: number, currency: 'ARS' | 'USD' = 'ARS') =>
@@ -58,20 +69,19 @@ const fmt = (n: number, currency: 'ARS' | 'USD' = 'ARS') =>
 
 const daysUntil = (dateStr: string) => {
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const due   = new Date(dateStr); due.setHours(0, 0, 0, 0);
+  const due = new Date(dateStr); due.setHours(0, 0, 0, 0);
   return Math.round((due.getTime() - today.getTime()) / 86400000);
 };
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [data, setData]         = useState<DashboardData | null>(null);
-  const [checks, setChecks]     = useState<Check[]>([]);
-  const [now, setNow]           = useState(new Date());
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [checks, setChecks] = useState<Check[]>([]);
+  const [now, setNow] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
-  const [fxPos, setFxPos]       = useState<{ comprasUSD: number; ventasUSD: number; comprasARS: number; ventasARS: number; netUSD: number; totalOps: number } | null>(null);
-  const [fxTc, setFxTc]         = useState<string>('');
+  const [fxPos, setFxPos] = useState<{ comprasUSD: number; ventasUSD: number; comprasARS: number; ventasARS: number; netUSD: number; totalOps: number } | null>(null);
+  const [fxTc, setFxTc] = useState('');
 
-  // Live clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(t);
@@ -88,353 +98,254 @@ export default function DashboardPage() {
       setData(dashData);
       setFxPos(bsData?.fxPosition ?? null);
       const allChecks = Array.isArray(checksData) ? checksData : [];
-      // Checks expiring within 7 days (IN_PORTFOLIO only)
-      const soon = allChecks
-        .filter((c: any) => c.status === 'IN_PORTFOLIO')
-        .filter((c: any) => {
-          const d = daysUntil(c.due_date);
-          return d >= 0 && d <= 7;
-        })
-        .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-      setChecks(soon);
+      setChecks(allChecks.filter((c: any) => {
+        if (c.status !== 'IN_PORTFOLIO') return false;
+        const d = daysUntil(c.due_date);
+        return d >= 0 && d <= 7;
+      }));
     } catch (e) { console.error(e); }
     finally { setRefreshing(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const totalCajasARS = data?.treasuryStatus.reduce((acc, t) => acc + (t.closingBalance?.ARS || 0), 0) ?? 0;
-  const totalCajasUSD = data?.treasuryStatus.reduce((acc, t) => acc + (t.closingBalance?.USD || 0), 0) ?? 0;
-  const totalMovsHoy  = data?.treasuryStatus.reduce((acc, t) => acc + (t.movementsToday || 0), 0) ?? 0;
-
   const isLoading = !data;
 
+  const totalCajasARS = data?.treasuryStatus.reduce((acc, t) => acc + (t.closingBalance?.ARS || 0), 0) ?? 0;
+  const totalCajasUSD = data?.treasuryStatus.reduce((acc, t) => acc + (t.closingBalance?.USD || 0), 0) ?? 0;
+  const sumIngresos = data?.chartData.reduce((acc, c) => acc + c.Ingresos, 0) ?? 0;
+  const sumEgresos = data?.chartData.reduce((acc, c) => acc + c.Egresos, 0) ?? 0;
+
   return (
-    <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500 max-w-7xl mx-auto pb-12">
+    <div className="animate-in fade-in duration-500">
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+      <header className="mb-[26px] flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#d1dded] mb-1 tracking-tight">Panel Central</h1>
-          <p className="text-[#aab6c7] text-sm">
+          <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Panel Central</h1>
+          <p className="mt-[5px] text-[13.5px] text-subtle">
             {now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {data?.date && ` · Actualizado ${new Date(data.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {data?.date && (
-            <span className="text-xs text-[#475569]">
-              Actualizado: {new Date(data.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
+        <div className="flex gap-[10px]">
           <button
             onClick={load}
             disabled={refreshing}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border border-[#334155]/50 text-sm font-medium transition-all ${refreshing ? 'opacity-50 cursor-not-allowed text-[#475569]' : 'text-[#94a3b8] hover:text-white hover:bg-white/5'}`}
+            className="rounded-[9px] border border-line bg-surface px-[15px] py-[9px] text-[13px] font-medium text-ink-soft transition-colors hover:bg-track disabled:opacity-50"
           >
-            <span className={refreshing ? 'animate-spin' : ''}>↻</span>
-            {refreshing ? 'Actualizando...' : 'Actualizar'}
+            <span className={`mr-1 inline-block ${refreshing ? 'animate-spin' : ''}`}>↻</span>
+            {refreshing ? 'Actualizando…' : 'Actualizar'}
+          </button>
+          <button
+            onClick={() => router.push('/dashboard/incomes')}
+            className="rounded-[9px] bg-ink px-[16px] py-[9px] text-[13px] font-medium text-white transition-opacity hover:opacity-85"
+          >
+            + Movimiento
           </button>
         </div>
       </header>
 
-      {/* ── KPI GRID ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Caja ARS */}
-        <div className="glass-panel hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(14,165,233,0.12)] transition-all duration-300 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all duration-500" />
-          <div className="flex items-start justify-between relative z-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#64748b] mb-3">Cajas ARS</p>
-            <span className="text-lg">💵</span>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight relative z-10 ${isLoading ? 'text-[#334155] animate-pulse' : 'text-[#f8fafc]'}`}>
-            {isLoading ? '—' : fmt(totalCajasARS)}
-          </p>
-          <p className="text-xs text-[#475569] mt-2 relative z-10">{totalMovsHoy} mov. hoy</p>
-        </div>
-
-        {/* Caja USD */}
-        <div className="glass-panel hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(52,211,153,0.12)] transition-all duration-300 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500" />
-          <div className="flex items-start justify-between relative z-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#64748b] mb-3">Cajas USD</p>
-            <span className="text-lg">💲</span>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight relative z-10 ${isLoading ? 'text-[#334155] animate-pulse' : 'text-emerald-300'}`}>
-            {isLoading ? '—' : fmt(totalCajasUSD, 'USD')}
-          </p>
-          <p className="text-xs text-[#475569] mt-2 relative z-10">Dólares físicos en caja</p>
-        </div>
-
-        {/* Cheques en Cartera */}
-        <div className="glass-panel hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all duration-500" />
-          <div className="flex items-start justify-between relative z-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#64748b] mb-3">Cheques en Cartera</p>
-            <span className="text-lg">🏦</span>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight relative z-10 ${isLoading ? 'text-[#334155] animate-pulse' : 'text-violet-300'}`}>
-            {isLoading ? '—' : fmt(data.metrics.checksBalanceARS)}
-          </p>
-          <p className="text-xs text-[#475569] mt-2 relative z-10">
-            {isLoading ? '—' : `${data.metrics.checksInPortfolio} cheque(s)`}
-            {data?.metrics.checksBalanceUSD ? ` · U$S ${data.metrics.checksBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : ''}
-          </p>
-        </div>
-
-        {/* Cheques Próximos a Vencer (alerta) */}
-        <div
-          onClick={() => router.push('/dashboard/checks')}
-          className={`cursor-pointer glass-panel hover:scale-[1.02] transition-all duration-300 rounded-2xl p-5 relative overflow-hidden group ${checks.length > 0 ? 'hover:shadow-[0_0_20px_rgba(251,191,36,0.15)] border-amber-500/20' : 'border-[#334155]/50'}`}
-        >
-          <div className={`absolute top-0 right-0 w-28 h-28 rounded-full blur-2xl transition-all duration-500 ${checks.length > 0 ? 'bg-amber-500/10 group-hover:bg-amber-500/20' : 'bg-[#334155]/10'}`} />
-          <div className="flex items-start justify-between relative z-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#64748b] mb-3">Vencen en 7 días</p>
-            <span className="text-lg">{checks.length > 0 ? '⚠️' : '✅'}</span>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight relative z-10 ${checks.length > 0 ? 'text-amber-300' : 'text-[#475569]'}`}>
-            {checks.length} cheque{checks.length !== 1 ? 's' : ''}
-          </p>
-          <p className="text-xs text-[#475569] mt-2 relative z-10">
-            {checks.length > 0
-              ? `Total: ${fmt(checks.reduce((a, c) => a + Number(c.amount), 0))}`
-              : 'Sin vencimientos próximos'}
-          </p>
-        </div>
+      {/* ── KPIs ───────────────────────────────────────────────────────── */}
+      <div className="mb-4 grid grid-cols-2 gap-[14px] lg:grid-cols-4">
+        <KpiCard
+          label="Balance total"
+          value={fmt(totalCajasARS)}
+          delta={totalCajasUSD ? fmt(totalCajasUSD, 'USD') : undefined}
+          deltaTone="accent"
+          sub={totalCajasUSD ? 'en dólares' : 'en cajas'}
+          loading={isLoading}
+        />
+        <KpiCard
+          label="Ingresos (30 días)"
+          value={fmt(sumIngresos)}
+          sub="flujo de los últimos 30 días"
+          loading={isLoading}
+        />
+        <KpiCard
+          label="Egresos (30 días)"
+          value={fmt(sumEgresos)}
+          sub="flujo de los últimos 30 días"
+          loading={isLoading}
+        />
+        <KpiCard
+          label="Cheques en cartera"
+          value={isLoading ? '' : fmt(data.metrics.checksBalanceARS)}
+          delta={isLoading ? undefined : `${data.metrics.checksInPortfolio} cheques`}
+          deltaTone="accent"
+          sub={checks.length > 0 ? `· ${checks.length} esta semana` : undefined}
+          loading={isLoading}
+        />
       </div>
 
-      {/* ── CHEQUES PRÓXIMOS A VENCER ────────────────────────────────── */}
-      {checks.length > 0 && (
-        <section className="glass-panel rounded-2xl p-5 mb-8 border border-amber-500/20 bg-amber-500/5 animate-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              ⚠️ Cheques próximos a vencer (7 días)
-            </h2>
-            <button
-              onClick={() => router.push('/dashboard/checks')}
-              className="text-xs text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2"
-            >
-              Ver todos →
-            </button>
+      {/* ── GRÁFICO ────────────────────────────────────────────────────── */}
+      <Card className="mb-4 px-6 py-[22px]">
+        <div className="mb-[10px] flex items-start justify-between">
+          <div>
+            <div className="text-[15.5px] font-semibold text-ink">Ingresos vs. Egresos</div>
+            <div className="mt-[2px] text-[12.5px] text-subtle">Últimos 8 meses · en millones de ARS</div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {checks.map(c => {
-              const d = daysUntil(c.due_date);
-              return (
-                <div key={c.id} className={`flex items-center justify-between p-3 rounded-xl border text-sm ${d === 0 ? 'border-red-500/30 bg-red-500/10' : 'border-amber-500/20 bg-amber-500/5'}`}>
-                  <div>
-                    <p className="font-semibold text-[#f8fafc]">{c.bank_name} <span className="text-[#64748b] font-normal">#{c.check_number}</span></p>
-                    <p className="text-xs text-[#64748b] mt-0.5">{c.source_client?.name ?? 'Ventanilla'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-bold font-mono ${d === 0 ? 'text-red-400' : 'text-amber-300'}`}>
-                      {fmt(Number(c.amount))}
-                    </p>
-                    <p className={`text-xs font-bold mt-0.5 ${d === 0 ? 'text-red-400' : 'text-amber-500'}`}>
-                      {d === 0 ? 'Vence HOY' : `${d} día${d !== 1 ? 's' : ''}`}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── GRÁFICO ─────────────────────────────────────────────────────── */}
-      <section className="glass-panel rounded-2xl p-6 mb-8" style={{ height: '340px' }}>
-        <h2 className="text-base font-bold text-[#d1dded] mb-1">Flujo de Fondos — Últimos 30 días (ARS)</h2>
-        <p className="text-xs text-[#475569] mb-5">Ingresos vs. Egresos diarios en pesos.</p>
-        <ResponsiveContainer width="100%" height="80%">
-          <BarChart data={data?.chartData || []} margin={{ top: 0, right: 0, left: -20, bottom: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e2d40" vertical={false} />
-            <XAxis dataKey="date" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={8} interval="preserveStartEnd" />
-            <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false}
-              tickFormatter={v => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
-            <Tooltip
-              cursor={{ fill: '#1e2d40', opacity: 0.6 }}
-              contentStyle={{ backgroundColor: '#0a1324', borderColor: '#334155', borderRadius: '10px', color: '#d1dded', fontSize: 12 }}
-              formatter={(v: any) => [`$ ${Number(v).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`, undefined]}
-            />
-            <Legend wrapperStyle={{ paddingTop: '12px', fontSize: 12 }} />
-            <Bar dataKey="Ingresos" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />
-            <Bar dataKey="Egresos"  fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={32} />
-          </BarChart>
-        </ResponsiveContainer>
-      </section>
-
-      {/* ── POSICIÓN NETA FX ─────────────────────────────────────── */}
-      {fxPos && (
-        <section className="glass-panel rounded-2xl border border-violet-500/30 bg-violet-500/5 overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-violet-500/20 flex justify-between items-center">
-            <div>
-              <h2 className="text-base font-bold text-violet-400 uppercase tracking-wider">Posición Neta FX</h2>
-              <p className="text-xs text-[#64748b] mt-0.5">Acumulado histórico de compras y ventas de divisas · {fxPos.totalOps} operaciones</p>
-            </div>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full ${fxPos.netUSD >= 0 ? 'bg-violet-500/20 text-violet-300' : 'bg-rose-500/20 text-rose-300'}`}>
-              {fxPos.netUSD >= 0 ? 'Posición Vendedora' : 'Posición Compradora'}
+          <div className="flex items-center gap-[18px]">
+            <span className="flex items-center gap-[7px] text-[12.5px] text-ink-soft">
+              <span className="h-[11px] w-[11px] rounded-[3px] bg-accent" />Ingresos
+            </span>
+            <span className="flex items-center gap-[7px] text-[12.5px] text-ink-soft">
+              <span className="h-[11px] w-[11px] rounded-[3px] bg-accent-soft" />Egresos
             </span>
           </div>
-          <div className="px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Compras USD</p>
-              <p className="text-lg font-bold font-mono text-sky-400">U$S {fxPos.comprasUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs font-mono text-[#475569] mt-1">$ {fxPos.comprasARS.toLocaleString('en-US', { minimumFractionDigits: 2 })} pagados</p>
-            </div>
-            <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Ventas USD</p>
-              <p className="text-lg font-bold font-mono text-emerald-400">U$S {fxPos.ventasUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs font-mono text-[#475569] mt-1">$ {fxPos.ventasARS.toLocaleString('en-US', { minimumFractionDigits: 2 })} cobrados</p>
-            </div>
-            <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Diferencial USD</p>
-              <p className={`text-lg font-bold font-mono ${fxPos.netUSD >= 0 ? 'text-violet-300' : 'text-rose-400'}`}>U$S {Math.abs(fxPos.netUSD).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs text-[#475569] mt-1">{fxPos.netUSD >= 0 ? 'Vendidos neto' : 'Comprados neto'}</p>
-            </div>
-            <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-              <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Diferencial ARS</p>
-              <p className={`text-lg font-bold font-mono ${(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'text-violet-300' : 'text-rose-400'}`}>$ {Math.abs(fxPos.ventasARS - fxPos.comprasARS).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs text-[#475569] mt-1">{(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'ARS cobrados neto' : 'ARS pagados neto'}</p>
-            </div>
-          </div>
-          {/* TC de referencia + resultado */}
-          {(() => {
-            const netUSDheld     = fxPos.comprasUSD - fxPos.ventasUSD;
-            const netARSreceived = fxPos.ventasARS  - fxPos.comprasARS;
-            const tcImplicito = Math.abs(netUSDheld) > 0.001 ? Math.abs(netARSreceived) / Math.abs(netUSDheld) : null;
-            const tc = parseFloat(fxTc);
-            const resultado = !isNaN(tc) && tc > 0 ? netARSreceived + netUSDheld * tc : null;
-            return (
-              <div className="border-t border-violet-500/10">
-                {tcImplicito !== null && (
-                  <div className="px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-violet-500/10">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-[#64748b] uppercase tracking-wider">TC de la posición</span>
-                      <span className="text-xl font-bold font-mono text-violet-300">{tcImplicito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                    <p className="text-xs text-[#64748b] italic">
-                      {netUSDheld < 0 ? 'Comprá por debajo de este TC → ganás · Comprá por encima → perdés' : 'Vendé por encima de este TC → ganás · Vendé por debajo → perdés'}
-                    </p>
-                  </div>
-                )}
-                <div className="px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">TC de referencia</label>
-                    <div className="flex items-center bg-[#0f172a]/60 border border-[#334155]/50 rounded-lg px-3 py-1.5">
-                      <span className="text-xs text-[#475569] mr-1">$</span>
-                      <input type="number" min="0" step="1" placeholder="ej. 1400" value={fxTc} onChange={e => setFxTc(e.target.value)} className="bg-transparent text-sm font-mono text-[#d1dded] w-28 focus:outline-none" />
-                    </div>
-                  </div>
-                  {resultado !== null && (
-                    <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border ${resultado >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                      <span className="text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">Resultado a TC {tc.toLocaleString('es-AR')}</span>
-                      <span className={`text-xl font-bold font-mono ${resultado >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{resultado >= 0 ? '+' : ''}$ {resultado.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  )}
-                  {resultado === null && <p className="text-xs text-[#475569] italic">Ingresá un TC para calcular la ganancia o pérdida sobre el diferencial</p>}
-                </div>
+        </div>
+        {/* Nota: datos de demo (DEMO_MONTHLY_CHART) — ver comentario arriba. */}
+        <ResponsiveContainer width="100%" height={230}>
+          <AreaChart data={DEMO_MONTHLY_CHART} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="#f2f2ef" />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#b4b4ac', fontSize: 11.5 }} dy={8} />
+            <YAxis hide />
+            <Tooltip
+              contentStyle={{ background: '#fff', border: '1px solid #efefec', borderRadius: 10, fontSize: 12, color: '#1c1c19' }}
+              formatter={(v: any) => [`${v} M`, undefined]}
+            />
+            <Area type="linear" dataKey="ingresos" name="Ingresos" stroke="#5e5ce6" strokeWidth={2.5} fill="#5e5ce6" fillOpacity={0.07} />
+            <Area type="linear" dataKey="egresos" name="Egresos" stroke="#cbcbf6" strokeWidth={2.5} fill="transparent" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* ── POSICIÓN FX ────────────────────────────────────────────────── */}
+      {fxPos && (() => {
+        const netUSDheld = fxPos.comprasUSD - fxPos.ventasUSD;      // > 0 = comprador neto
+        const netARSreceived = fxPos.ventasARS - fxPos.comprasARS;
+        const tcImplicito = Math.abs(netUSDheld) > 0.001 ? Math.abs(netARSreceived) / Math.abs(netUSDheld) : null;
+        const tc = parseFloat(fxTc);
+        const resultado = !isNaN(tc) && tc > 0 ? netARSreceived + netUSDheld * tc : null;
+        const fxCells = [
+          { label: 'Compras USD', value: fmt(fxPos.comprasUSD, 'USD'), color: 'text-ink', sub: `${fmt(fxPos.comprasARS)} pagados` },
+          { label: 'Ventas USD', value: fmt(fxPos.ventasUSD, 'USD'), color: 'text-ink', sub: `${fmt(fxPos.ventasARS)} cobrados` },
+          { label: 'Diferencial USD', value: fmt(Math.abs(netUSDheld), 'USD'), color: 'text-accent', sub: netUSDheld >= 0 ? 'Comprados neto' : 'Vendidos neto' },
+          { label: 'Diferencial ARS', value: fmt(Math.abs(netARSreceived)), color: 'text-accent', sub: netARSreceived >= 0 ? 'ARS cobrados neto' : 'ARS pagados neto' },
+        ];
+        return (
+          <Card className="mb-4 px-6 py-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <div className="text-[15.5px] font-semibold text-ink">Posición neta de cambio (FX)</div>
+                <div className="mt-[2px] text-[12.5px] text-subtle">Acumulado histórico · {fxPos.totalOps} operaciones</div>
               </div>
-            );
-          })()}
-        </section>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pb-4">
-
-        {/* ── ÚLTIMOS MOVIMIENTOS ───────────────────────────────────────── */}
-        <section className="lg:col-span-3 glass-panel rounded-2xl p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold text-[#d1dded]">Últimos Movimientos</h2>
-            <button onClick={() => router.push('/dashboard/transactions')}
-              className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium underline underline-offset-2">
-              Ver todo →
-            </button>
-          </div>
-          <div className="flex-1 space-y-2">
-            {isLoading ? (
-              [...Array(4)].map((_, i) => (
-                <div key={i} className="h-14 rounded-xl bg-[#0a1324]/60 animate-pulse" />
-              ))
-            ) : data.recentTransactions.length === 0 ? (
-              <p className="text-[#475569] text-sm text-center py-8">Sin movimientos recientes.</p>
-            ) : data.recentTransactions.map(tx => {
-              const txStyle = TX_LABELS[tx.type] ?? { label: tx.type, color: 'text-[#94a3b8]', bg: 'bg-[#334155]/30 border-[#334155]/50' };
-              const mainMov = tx.movements.find(m => m.type === (tx.type === 'INCOME' ? 'DEBIT' : 'CREDIT')) ?? tx.movements[0];
-              const isPositive = tx.type === 'INCOME';
-              return (
-                <div key={tx.id} className="flex items-center justify-between p-3 rounded-xl bg-[#081329]/60 border border-[#1e2d40] hover:border-[#334155] hover:bg-[#0a1324]/80 transition-all">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${txStyle.bg} ${txStyle.color}`}>
-                      {txStyle.label}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm text-[#d1dded] font-medium truncate">{tx.description || '—'}</p>
-                      <p className="text-[10px] text-[#475569]">
-                        {new Date(tx.operation_date).toLocaleDateString('es-AR')}
-                        {tx.user?.name ? ` · ${tx.user.name}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <p className={`shrink-0 ml-3 font-bold font-mono text-sm ${isPositive ? 'text-emerald-400' : tx.type === 'TRANSFER' ? 'text-amber-400' : 'text-red-400'}`}>
-                    {isPositive ? '+' : tx.type !== 'TRANSFER' ? '−' : ''}
-                    {mainMov?.currency === 'USD' ? 'U$S ' : '$ '}{Number(mainMov?.amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── ACCIONES RÁPIDAS ──────────────────────────────────────────── */}
-        <section className="lg:col-span-2 glass-panel rounded-2xl p-6">
-          <h2 className="text-base font-bold text-[#d1dded] mb-5">Acciones Rápidas</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { icon: '↑', label: 'Nuevo Ingreso',   sub: 'Pesos, dólares o cheque',   href: '/dashboard/incomes',     color: 'hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:shadow-[0_0_12px_rgba(16,185,129,0.1)]' },
-              { icon: '↓', label: 'Nuevo Egreso',    sub: 'Registrar salida de fondos', href: '/dashboard/expenses',    color: 'hover:border-red-500/40 hover:bg-red-500/5 hover:shadow-[0_0_12px_rgba(239,68,68,0.1)]' },
-              { icon: '💱', label: 'C/V Dólares',    sub: 'Compra y venta de USD',      href: '/dashboard/fx',          color: 'hover:border-sky-500/40 hover:bg-sky-500/5' },
-              { icon: '🏦', label: 'C/V Cheques',    sub: 'Operar cheques en cartera',  href: '/dashboard/check-trade', color: 'hover:border-violet-500/40 hover:bg-violet-500/5' },
-              { icon: '📋', label: 'Caja Diaria',   sub: 'Caja y movimientos del día', href: '/dashboard/daily-ledger',color: 'hover:border-amber-500/40 hover:bg-amber-500/5' },
-              { icon: '👥', label: 'Clientes',       sub: 'Fichas y extractos',         href: '/dashboard/clients',     color: 'hover:border-[#0ea5e9]/40 hover:bg-[#0ea5e9]/5' },
-            ].map(a => (
-              <button
-                key={a.href}
-                onClick={() => router.push(a.href)}
-                className={`flex flex-col items-start p-3.5 rounded-xl bg-[#081329]/60 border border-[#1e2d40] transition-all duration-200 text-left ${a.color}`}
-              >
-                <span className="text-xl mb-1.5 leading-none">{a.icon}</span>
-                <span className="text-sm font-semibold text-[#d1dded] leading-tight">{a.label}</span>
-                <span className="text-[10px] text-[#475569] mt-0.5 leading-tight">{a.sub}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Estado de Cajas */}
-          <div className="mt-5 pt-5 border-t border-[#1e2d40]">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#475569] mb-3">Estado de Cajas</p>
-            <div className="space-y-2">
-              {isLoading ? (
-                <div className="h-8 rounded-lg bg-[#0a1324]/60 animate-pulse" />
-              ) : data.treasuryStatus.length === 0 ? (
-                <p className="text-xs text-[#475569]">Sin cajas configuradas.</p>
-              ) : data.treasuryStatus.map((box, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-[#64748b] font-medium">{box.name}</span>
-                  <div className="text-right">
-                    <span className="text-[#d1dded] font-mono font-bold">
-                      {fmt(box.closingBalance?.ARS || 0)}
-                    </span>
-                    {(box.closingBalance?.USD || 0) !== 0 && (
-                      <span className="text-emerald-400 font-mono font-bold ml-2">
-                        {fmt(box.closingBalance?.USD || 0, 'USD')}
-                      </span>
-                    )}
-                    <span className="text-[#334155] ml-2">· {box.movementsToday} mov.</span>
-                  </div>
+              <Pill tone="accent">{fxPos.netUSD >= 0 ? 'Posición vendedora' : 'Posición compradora'}</Pill>
+            </div>
+            <div className="grid grid-cols-2 overflow-hidden rounded-[11px] border border-[#f0f0ec] sm:grid-cols-4">
+              {fxCells.map((c, i) => (
+                <div key={c.label} className={`px-[18px] py-[15px] ${i < fxCells.length - 1 ? 'sm:border-r' : ''} border-[#f0f0ec]`}>
+                  <div className="mb-[9px] text-[11px] font-medium uppercase tracking-[0.03em] text-placeholder">{c.label}</div>
+                  <div className={`font-mono text-[16.5px] font-semibold ${c.color}`}>{c.value}</div>
+                  <div className="mt-1 text-[11.5px] text-faint">{c.sub}</div>
                 </div>
               ))}
             </div>
+
+            {/* TC de la posición + calculadora de referencia (reutiliza fxTc) */}
+            <div className="mt-[14px] flex flex-col gap-3 border-t border-[#f0f0ec] pt-[14px] sm:flex-row sm:flex-wrap sm:items-center">
+              {tcImplicito !== null && (
+                <div className="flex items-center gap-3">
+                  <span className="text-[12.5px] font-medium text-muted">TC de la posición</span>
+                  <span className="font-mono text-[18px] font-semibold text-accent">
+                    {tcImplicito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="hidden text-[12px] italic text-faint lg:inline">
+                    {netUSDheld < 0 ? 'Comprá por debajo → ganás · por encima → perdés' : 'Vendé por encima → ganás · por debajo → perdés'}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-1 items-center justify-end gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-[12px] font-medium text-muted">TC de referencia</label>
+                  <div className="flex items-center rounded-[9px] border border-line bg-surface px-3 py-[6px]">
+                    <span className="mr-1 text-[12px] text-faint">$</span>
+                    <input
+                      type="number" min="0" step="1" placeholder="ej. 1400"
+                      value={fxTc} onChange={e => setFxTc(e.target.value)}
+                      className="w-24 bg-transparent font-mono text-[13px] text-ink focus:outline-none"
+                    />
+                  </div>
+                </div>
+                {resultado !== null && (
+                  <span className={`font-mono text-[15px] font-semibold ${resultado >= 0 ? 'text-positive' : 'text-negative'}`}>
+                    {resultado >= 0 ? '+' : ''}{fmt(resultado)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
+
+      {/* ── FILA INFERIOR ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr]">
+
+        {/* Egresos por categoría (datos de demo) */}
+        <Card className="px-[22px] py-5">
+          <div className="mb-[18px] text-[15.5px] font-semibold text-ink">Egresos por categoría</div>
+          {DEMO_CATEGORIES.map(cat => {
+            const w = (cat.pct / CAT_MAX) * 100;
+            const op = 0.4 + (cat.pct / CAT_MAX) * 0.6;
+            return (
+              <div key={cat.name} className="mb-[14px]">
+                <div className="mb-[6px] flex justify-between text-[12.5px]">
+                  <span className="font-medium text-ink-soft">{cat.name}</span>
+                  <span className="font-mono text-subtle">{cat.amt} · {cat.pct}%</span>
+                </div>
+                <div className="h-[7px] overflow-hidden rounded-[4px] bg-track">
+                  <div className="h-full rounded-[4px] bg-accent" style={{ width: `${w}%`, opacity: op }} />
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+
+        {/* Movimientos recientes (datos reales) */}
+        <Card className="px-[22px] py-5">
+          <div className="mb-[14px] flex items-center justify-between">
+            <div className="text-[15.5px] font-semibold text-ink">Movimientos recientes</div>
+            <button
+              onClick={() => router.push('/dashboard/transactions')}
+              className="text-[12.5px] font-medium text-accent hover:underline"
+            >
+              Ver todo
+            </button>
           </div>
-        </section>
+
+          {isLoading ? (
+            [...Array(5)].map((_, i) => <div key={i} className="my-2 h-[44px] rounded-[9px] bg-track animate-pulse" />)
+          ) : data.recentTransactions.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-faint">Sin movimientos recientes.</p>
+          ) : data.recentTransactions.map((tx, i) => {
+            const meta = TX_META[tx.type] ?? { label: tx.type, tone: 'neutral' as Tone };
+            const mainMov = tx.movements.find(m => m.type === (tx.type === 'INCOME' ? 'DEBIT' : 'CREDIT')) ?? tx.movements[0];
+            const isPositive = tx.type === 'INCOME';
+            const amtColor = isPositive ? 'text-positive' : tx.type === 'OUTCOME' ? 'text-negative' : 'text-ink';
+            return (
+              <div
+                key={tx.id}
+                className={`-mx-2 flex items-center justify-between rounded-[9px] px-2 py-[11px] transition-colors hover:bg-row-hover ${i > 0 ? 'border-t border-[#f4f4f1]' : ''}`}
+              >
+                <div className="flex min-w-0 items-center gap-[13px]">
+                  <Badge tone={meta.tone}>{meta.label}</Badge>
+                  <div className="min-w-0">
+                    <div className="truncate text-[13.5px] font-medium text-ink-body">{tx.description || '—'}</div>
+                    <div className="text-[11.5px] text-faint">
+                      {new Date(tx.operation_date).toLocaleDateString('es-AR')}
+                      {tx.user?.name ? ` · ${tx.user.name}` : ''}
+                    </div>
+                  </div>
+                </div>
+                <span className={`shrink-0 font-mono text-[13.5px] font-semibold ${amtColor}`}>
+                  {isPositive ? '+' : tx.type === 'OUTCOME' ? '−' : ''}
+                  {mainMov?.currency === 'USD' ? 'U$S ' : '$ '}
+                  {Number(mainMov?.amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            );
+          })}
+        </Card>
       </div>
     </div>
   );

@@ -1,53 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #050B14;
-  --foreground: #f8fafc;
-  
-  --panel-bg: rgba(15, 23, 42, 0.4);
-  --border-color: rgba(51, 65, 85, 0.5);
-  
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+/* ─────────────────────────────────────────────────────────────────────────
+   Design tokens — dirección "Minimal & sobrio" (Linear / Vercel style).
+   El violeta de acento (--color-accent) es la ÚNICA fuente de verdad de la
+   marca: cambiándolo acá se recolorea acento, gráfico y bloque FX.
+   Todos los tokens quedan disponibles como utilidades Tailwind v4
+   (bg-surface, text-accent, border-line, etc.).
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Tipografía (Geist + Geist Mono, cargadas vía next/font en app/layout.tsx) */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --accent-light: #38bdf8;
-  --accent-base: #0ea5e9;
-  --accent-dark: #0284c7;
+  /* Acento (violeta) */
+  --color-accent: #5e5ce6;
+  --color-accent-soft: #cbcbf6; /* línea de egresos en el gráfico */
+  --color-accent-bg: #eeedfd;   /* fondo de badges / pills de acento */
+
+  /* Superficies */
+  --color-canvas: #f6f6f4;  /* fondo general (blanco cálido) */
+  --color-surface: #ffffff; /* tarjetas y sidebar */
+
+  /* Bordes / tracks */
+  --color-line: #efefec;        /* borde de tarjetas */
+  --color-line-strong: #ececea; /* borde del sidebar */
+  --color-line-hover: #e2e2dd;  /* borde de tarjeta en hover */
+  --color-track: #f2f2ef;       /* tracks de barra, ítem activo, hover */
+  --color-row-hover: #fafaf8;   /* fila de movimiento en hover */
+
+  /* Texto (grises cálidos) */
+  --color-ink: #1c1c19;         /* títulos, valores */
+  --color-ink-body: #2c2c28;    /* texto secundario oscuro */
+  --color-ink-soft: #4b4b45;    /* texto secundario */
+  --color-muted: #6b6b62;       /* nav inactivo */
+  --color-subtle: #9a9a90;      /* subtítulos */
+  --color-faint: #b4b4ac;       /* metadatos, ejes */
+  --color-placeholder: #a3a399; /* labels de sub */
+  --color-section: #b0b0a6;     /* labels de sección */
+
+  /* Semánticos */
+  --color-positive: #0a7a52;
+  --color-positive-bg: #eef7f2;
+  --color-negative: #b42318;
+  --color-negative-bg: #fdf1f0;
+  --color-warn: #b25a00;
+  --color-warn-bg: #fdf4ea;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Outfit', sans-serif;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  font-family: var(--font-sans);
   min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.08), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.05), transparent 25%);
-  background-attachment: fixed;
 }
 
-.glass-panel {
-  background: var(--panel-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-}
-
-/* Custom Scrollbar */
+/* Scrollbar sobrio y claro */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(51, 65, 85, 0.8);
-  border-radius: 10px;
+  background: #d8d8d2;
+  border-radius: 6px;
+  border: 2px solid var(--color-canvas);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--accent-base);
+  background: #c4c4bd;
 }
