@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/services/api';
 import { getUserId } from '@/services/auth';
+import { Card } from '@/components/ui/Card';
+import { inputClass, selectClass } from '@/components/ui/forms';
 
 interface Client {
   id: string;
@@ -75,61 +77,61 @@ export default function ClientsPage() {
   });
 
   return (
-    <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500">
-      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#141f32]/40 backdrop-blur-md border border-[#2c394a] shadow-lg rounded-2xl p-6">
+    <div className="mx-auto h-full w-full max-w-[1400px] animate-in fade-in duration-500">
+      <header className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-[#d1dded] mb-2">Directorio de Clientes</h1>
-          <p className="text-[#aab6c7]">Administración de cuentas corrientes y entidades.</p>
+          <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Directorio de Clientes</h1>
+          <p className="mt-1 text-[13.5px] text-muted">Administración de cuentas corrientes y entidades.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-[#0ea5e9]/20 hover:shadow-[#0ea5e9]/30 hover:-translate-y-0.5 whitespace-nowrap"
+          className="whitespace-nowrap rounded-[9px] bg-ink px-5 py-2.5 font-bold text-white shadow-sm transition-all hover:opacity-85"
         >
           + Nuevo Cliente
         </button>
       </header>
 
       {/* SEARCH BAR */}
-      <div className="bg-[#141f32]/40 backdrop-blur-md border border-[#2c394a] rounded-2xl px-4 py-3 mb-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <span className="text-[#64748b] text-sm flex-shrink-0">🔍</span>
+      <Card className="mb-4 flex flex-col items-stretch gap-3 px-4 py-3 sm:flex-row sm:items-center">
+        <span className="flex-shrink-0 text-sm text-faint">🔍</span>
         <input
           type="text" value={clientSearch} onChange={e => setClientSearch(e.target.value)}
           placeholder="Buscar por nombre, teléfono o email..."
-          className="flex-1 min-w-0 bg-transparent text-sm text-[#d1dded] focus:outline-none placeholder:text-[#334155]"
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-faint focus:outline-none"
         />
         {clientSearch && (
-          <button onClick={() => setClientSearch('')} className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors flex-shrink-0 whitespace-nowrap">✕</button>
+          <button onClick={() => setClientSearch('')} className="flex-shrink-0 whitespace-nowrap text-xs font-medium text-accent transition-colors hover:underline">✕</button>
         )}
-        <span className="text-xs text-[#64748b] flex-shrink-0 border-l border-[#334155] pl-3">
-          <span className="text-[#d1dded] font-bold">{filteredClients.length}</span> / {clients.length}
+        <span className="flex-shrink-0 border-l border-line pl-3 text-xs text-muted">
+          <span className="font-bold text-ink">{filteredClients.length}</span> / {clients.length}
         </span>
-      </div>
+      </Card>
 
       {/* Table */}
-      <div className="bg-[#141f32]/40 backdrop-blur-md border border-[#2c394a] shadow-lg rounded-2xl overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left border-collapse">
+      <Card className="overflow-x-auto">
+        <table className="w-full min-w-[720px] border-collapse text-left">
           <thead>
-            <tr className="bg-[#081329]/50 border-b border-[#2c394a]">
-              <th className="p-4 text-[#aab6c7] font-medium">Nombre / Razón Social</th>
-              <th className="p-4 text-[#aab6c7] font-medium">Teléfono</th>
-              <th className="p-4 text-[#aab6c7] font-medium">Email</th>
-              <th className="p-4 text-[#aab6c7] font-medium text-right">Acciones</th>
+            <tr className="border-b border-line bg-track">
+              <th className="p-4 font-medium text-muted">Nombre / Razón Social</th>
+              <th className="p-4 font-medium text-muted">Teléfono</th>
+              <th className="p-4 font-medium text-muted">Email</th>
+              <th className="p-4 text-right font-medium text-muted">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="p-4 text-center text-[#7e8b9d]">Cargando clientes...</td></tr>
+              <tr><td colSpan={4} className="p-4 text-center text-faint">Cargando clientes...</td></tr>
             ) : filteredClients.length === 0 ? (
-              <tr><td colSpan={4} className="p-4 text-center text-[#7e8b9d]">{clientSearch ? '⚠ Sin resultados.' : 'No hay clientes registrados.'}</td></tr>
+              <tr><td colSpan={4} className="p-4 text-center text-faint">{clientSearch ? '⚠ Sin resultados.' : 'No hay clientes registrados.'}</td></tr>
             ) : (
               filteredClients.map(client => (
-                <tr key={client.id} className="border-b border-[#2c394a]/50 hover:bg-[#2c394a]/30 transition-colors">
-                  <td className="p-4 text-[#d1dded] font-medium">{client.name}</td>
-                  <td className="p-4 text-[#929fb1]">{client.tax_id || '-'}</td>
-                  <td className="p-4 text-[#929fb1]">{client.email || '-'}</td>
-                  <td className="p-4 text-right min-w-0">
+                <tr key={client.id} className="border-b border-line transition-colors hover:bg-row-hover">
+                  <td className="p-4 font-medium text-ink">{client.name}</td>
+                  <td className="p-4 text-muted">{client.tax_id || '-'}</td>
+                  <td className="p-4 text-muted">{client.email || '-'}</td>
+                  <td className="min-w-0 p-4 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <button onClick={() => router.push(`/dashboard/clients/${client.id}`)} className="text-[#d1dded] font-medium transition-colors text-sm px-3 py-1 rounded bg-[#2c394a]/50 hover:bg-[#4d596b] border border-[#4d596b] whitespace-nowrap">Ver Cajas</button>
+                      <button onClick={() => router.push(`/dashboard/clients/${client.id}`)} className="whitespace-nowrap rounded border border-line bg-surface px-3 py-1 text-sm font-medium text-ink transition-colors hover:bg-track">Ver Cajas</button>
                     </div>
                   </td>
                 </tr>
@@ -137,72 +139,72 @@ export default function ClientsPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {/* Basic Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#141f32] p-8 rounded-2xl border border-[#2c394a] w-full max-w-md shadow-2xl">
-            <h2 className="text-2xl font-bold text-[#d1dded] mb-6">Nuevo Cliente</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-[14px] border border-line bg-surface p-8 shadow-2xl">
+            <h2 className="mb-6 text-2xl font-semibold text-ink">Nuevo Cliente</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm text-[#aab6c7] mb-1">Nombre</label>
-                <input required value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="w-full bg-[#081329] border border-[#2c394a] rounded px-3 py-2 text-[#d1dded] focus:outline-none focus:border-[#677383]" />
+                <label className="mb-1 block text-sm text-muted">Nombre</label>
+                <input required value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className={inputClass} />
               </div>
               <div>
-                <label className="block text-sm text-[#aab6c7] mb-1">Teléfono</label>
-                <input value={newClient.tax_id} onChange={e => setNewClient({...newClient, tax_id: e.target.value})} className="w-full bg-[#081329] border border-[#2c394a] rounded px-3 py-2 text-[#d1dded] focus:outline-none focus:border-[#677383]" />
+                <label className="mb-1 block text-sm text-muted">Teléfono</label>
+                <input value={newClient.tax_id} onChange={e => setNewClient({...newClient, tax_id: e.target.value})} className={inputClass} />
               </div>
               <div>
-                <label className="block text-sm text-[#aab6c7] mb-1">Email</label>
-                <input type="email" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className="w-full bg-[#081329] border border-[#2c394a] rounded px-3 py-2 text-[#d1dded] focus:outline-none focus:border-[#677383]" />
+                <label className="mb-1 block text-sm text-muted">Email</label>
+                <input type="email" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className={inputClass} />
               </div>
 
               {/* Opening balance */}
-              <div className="border-t border-[#2c394a] pt-4">
-                <p className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Saldo Inicial (opcional)</p>
+              <div className="border-t border-line pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Saldo Inicial (opcional)</p>
                 <div className="space-y-3">
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-[#7e8b9d] w-8">ARS</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 text-xs text-faint">ARS</span>
                     <input
                       type="number" min="0" step="0.01" placeholder="0.00"
                       value={openingBalance.arsAmount}
                       onChange={e => setOpeningBalance(ob => ({ ...ob, arsAmount: e.target.value }))}
-                      className="flex-1 bg-[#081329] border border-[#2c394a] rounded px-3 py-2 text-[#d1dded] text-sm focus:outline-none focus:border-[#677383]"
+                      className={`${inputClass} flex-1 text-sm`}
                     />
                     <select
                       value={openingBalance.arsDir}
                       onChange={e => setOpeningBalance(ob => ({ ...ob, arsDir: e.target.value }))}
-                      className="bg-[#081329] border border-[#2c394a] rounded px-2 py-2 text-[#d1dded] text-sm focus:outline-none focus:border-[#677383]"
+                      className={`${selectClass} w-auto px-2 text-sm`}
                     >
                       <option value="ACREEDOR">Acreedor</option>
                       <option value="DEUDOR">Deudor</option>
                     </select>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-[#7e8b9d] w-8">USD</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 text-xs text-faint">USD</span>
                     <input
                       type="number" min="0" step="0.01" placeholder="0.00"
                       value={openingBalance.usdAmount}
                       onChange={e => setOpeningBalance(ob => ({ ...ob, usdAmount: e.target.value }))}
-                      className="flex-1 bg-[#081329] border border-[#2c394a] rounded px-3 py-2 text-[#d1dded] text-sm focus:outline-none focus:border-[#677383]"
+                      className={`${inputClass} flex-1 text-sm`}
                     />
                     <select
                       value={openingBalance.usdDir}
                       onChange={e => setOpeningBalance(ob => ({ ...ob, usdDir: e.target.value }))}
-                      className="bg-[#081329] border border-[#2c394a] rounded px-2 py-2 text-[#d1dded] text-sm focus:outline-none focus:border-[#677383]"
+                      className={`${selectClass} w-auto px-2 text-sm`}
                     >
                       <option value="ACREEDOR">Acreedor</option>
                       <option value="DEUDOR">Deudor</option>
                     </select>
                   </div>
                 </div>
-                <p className="text-xs text-[#4d596b] mt-2">Acreedor = le debemos al cliente · Deudor = el cliente nos debe</p>
+                <p className="mt-2 text-xs text-faint">Acreedor = le debemos al cliente · Deudor = el cliente nos debe</p>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => { setShowModal(false); setOpeningBalance(emptyOB()); }} className="px-4 py-2 text-[#aab6c7] hover:text-white transition-colors">Cancelar</button>
-                <button type="submit" className="bg-[#4d596b] hover:bg-[#677383] text-white px-6 py-2 rounded-lg font-medium transition-colors">Guardar</button>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button type="button" onClick={() => { setShowModal(false); setOpeningBalance(emptyOB()); }} className="px-4 py-2 text-muted transition-colors hover:text-ink">Cancelar</button>
+                <button type="submit" className="rounded-lg bg-ink px-6 py-2 font-medium text-white transition-colors hover:opacity-85">Guardar</button>
               </div>
             </form>
           </div>

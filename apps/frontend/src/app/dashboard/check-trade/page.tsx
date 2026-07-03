@@ -4,6 +4,8 @@ import { fetchApi } from '@/services/api';
 import { getUserId } from '@/services/auth';
 import { NumericFormat } from 'react-number-format';
 import toast from 'react-hot-toast';
+import { Card } from '@/components/ui/Card';
+import { inputClass, selectClass } from '@/components/ui/forms';
 
 const COMMISSION_LABELS: Record<string, string> = {
   RECHAZO:           'Por gastos de rechazo',
@@ -73,20 +75,15 @@ export default function CheckTradePage() {
   }, [form.sellerId]);
 
   // Determinar tipo de operación según quién es el vendedor
-  // BUY  = cliente vende a la agencia (agencia compra → PENDING_PURCHASE → IN_PORTFOLIO)
-  // SELL = agencia vende a un cliente (IN_PORTFOLIO → DELIVERED)
   const isBuyOperation  = !!form.sellerId && !form.sellerId.startsWith('BOX:');
   const isSellOperation = !!form.sellerId && form.sellerId.startsWith('BOX:');
 
   // ── Checks filtrados según tipo de operación ─────────────────────────
-  // BUY:  mostrar cheques PENDING_PURCHASE del cliente vendedor
-  // SELL: mostrar cheques IN_PORTFOLIO de la agencia
   const clientPortfolioChecks = useMemo(() => {
     if (!form.sellerId) return [];
     if (isSellOperation) {
       return availableChecks.filter((c: any) => c.status === 'IN_PORTFOLIO');
     }
-    // BUY: cheques pendientes de compra asociados al cliente vendedor
     return availableChecks.filter(
       (c: any) => c.status === 'PENDING_PURCHASE' && c.source_client?.id === form.sellerId
     );
@@ -151,7 +148,6 @@ export default function CheckTradePage() {
     const sellerClientId = form.sellerId.startsWith('BOX:') ? null : form.sellerId;
     const buyerIsAgency  = form.buyerId.startsWith('BOX:');
     const buyerClientId  = buyerIsAgency ? null : form.buyerId;
-    // Usar la caja seleccionada como agencyBoxId (vendedor BOX en SELL, comprador BOX en BUY)
     const rawBoxId = form.sellerId.startsWith('BOX:')
       ? form.sellerId.replace('BOX:', '')
       : form.buyerId.startsWith('BOX:')
@@ -163,7 +159,6 @@ export default function CheckTradePage() {
 
     setLoading(true);
     try {
-      // Compraventa + comisión en un único request atómico
       await fetchApi('/transactions/check-trade', {
         method: 'POST',
         body: JSON.stringify({
@@ -225,11 +220,11 @@ export default function CheckTradePage() {
   const [opsVisible, setOpsVisible] = useState(10);
 
   const statusLabel: Record<string, { label: string; cls: string }> = {
-    PENDING_PURCHASE: { label: 'Pend. Compra', cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
-    IN_PORTFOLIO:     { label: 'En Cartera',   cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
-    DELIVERED:        { label: 'Entregado',    cls: 'bg-violet-500/10 text-violet-400 border border-violet-500/20' },
-    DEPOSITED:        { label: 'Depositado',   cls: 'bg-[#0ea5e9]/10 text-[#0ea5e9] border border-[#0ea5e9]/20' },
-    REJECTED:         { label: 'Rechazado',    cls: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+    PENDING_PURCHASE: { label: 'Pend. Compra', cls: 'bg-warn-bg text-warn' },
+    IN_PORTFOLIO:     { label: 'En Cartera',   cls: 'bg-positive-bg text-positive' },
+    DELIVERED:        { label: 'Entregado',    cls: 'bg-accent-bg text-accent' },
+    DEPOSITED:        { label: 'Depositado',   cls: 'bg-track text-ink-soft' },
+    REJECTED:         { label: 'Rechazado',    cls: 'bg-negative-bg text-negative' },
   };
 
   const filtered = allChecks.filter(c => {
@@ -250,7 +245,6 @@ export default function CheckTradePage() {
     setFilterDueFrom(''); setFilterDueTo(''); setFilterMinAmount('');
   };
 
-  // Cliente vendedor (null si la agencia vende)
   const selectedClient = form.sellerId && !form.sellerId.startsWith('BOX:')
     ? clients.find(c => c.id === form.sellerId)
     : null;
@@ -258,39 +252,38 @@ export default function CheckTradePage() {
   // ─── MASTER VIEW ───────────────────────────────────────────────────────
   if (!isFormOpen) {
     return (
-      <div className="w-full animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto pb-8">
-        <header className="mb-6 flex justify-between items-end">
+      <div className="mx-auto w-full max-w-[1400px] animate-in fade-in duration-500 pb-8">
+        <header className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#f8fafc] mb-2 tracking-tight">Compra/Venta de Cheques</h1>
-            <p className="text-[#94a3b8]">Historial de cheques físicos cruzados e ingresados al sistema.</p>
+            <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Compra/Venta de Cheques</h1>
+            <p className="mt-1 text-[13.5px] text-muted">Historial de cheques físicos cruzados e ingresados al sistema.</p>
           </div>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="px-6 py-3 bg-[#0ea5e9] hover:bg-[#0284c7] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#0ea5e9]/20 hover:shadow-[#0ea5e9]/40 hover:-translate-y-0.5"
+            className="rounded-[9px] bg-ink px-6 py-3 font-bold text-white shadow-sm transition-all hover:opacity-85"
           >
             + Nueva Operación
           </button>
         </header>
 
         {/* FILTER BAR */}
-        <div className="glass-panel rounded-2xl border border-[#334155]/50 p-5 mb-4 space-y-4">
+        <Card className="mb-4 space-y-4 p-5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">Filtros</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Filtros</p>
             {hasActiveFilter && (
-              <button onClick={clearFilters} className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+              <button onClick={clearFilters} className="text-xs font-medium text-accent transition-colors hover:underline">
                 ✕ Limpiar filtros
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-faint">🔍</span>
               <input type="text" value={filterText} onChange={e => setFilterText(e.target.value)}
                 placeholder="Buscar banco o N° cheque..."
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9] placeholder:text-[#334155]" />
+                className={`${inputClass} pl-9`} />
             </div>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={selectClass}>
               <option value="">Todos los estados</option>
               <option value="PENDING_PURCHASE">Pendiente de Compra</option>
               <option value="IN_PORTFOLIO">En Cartera</option>
@@ -298,75 +291,74 @@ export default function CheckTradePage() {
               <option value="DEPOSITED">Depositado</option>
               <option value="REJECTED">Rechazado</option>
             </select>
-            <select value={filterClient} onChange={e => setFilterClient(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]">
+            <select value={filterClient} onChange={e => setFilterClient(e.target.value)} className={selectClass}>
               <option value="">Todos los clientes</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
-              <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Vencimiento desde</label>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Vencimiento desde</label>
               <input type="date" value={filterDueFrom} onChange={e => setFilterDueFrom(e.target.value)}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                className={inputClass} />
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Vencimiento hasta</label>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Vencimiento hasta</label>
               <input type="date" value={filterDueTo} onChange={e => setFilterDueTo(e.target.value)}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                className={inputClass} />
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Importe mínimo ($)</label>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Importe mínimo ($)</label>
               <input type="number" value={filterMinAmount} onChange={e => setFilterMinAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9] placeholder:text-[#334155]" />
+                className={inputClass} />
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="flex items-center justify-between mb-3 px-1">
-          <p className="text-sm text-[#64748b]">
-            <span className="text-[#d1dded] font-bold">{filtered.length}</span> resultado{filtered.length !== 1 ? 's' : ''}
-            {hasActiveFilter && <span className="text-[#0ea5e9] ml-1">(filtrado)</span>}
+        <div className="mb-3 flex items-center justify-between px-1">
+          <p className="text-sm text-muted">
+            <span className="font-bold text-ink">{filtered.length}</span> resultado{filtered.length !== 1 ? 's' : ''}
+            {hasActiveFilter && <span className="ml-1 text-accent">(filtrado)</span>}
           </p>
           {filtered.length > 0 && (
-            <p className="text-sm text-[#64748b]">
-              Total: <span className="text-emerald-400 font-bold font-mono">$ {filteredTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+            <p className="text-sm text-muted">
+              Total: <span className="font-mono font-bold text-positive">$ {filteredTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
             </p>
           )}
         </div>
 
-        <div className="glass-panel rounded-2xl overflow-x-auto border border-[#334155]/50 shadow-xl">
-          <table className="w-full text-left border-collapse">
+        <Card className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[#334155]/50 bg-[#0a1324]/50 text-[#94a3b8] text-xs uppercase tracking-wider">
+              <tr className="border-b border-line bg-track text-xs uppercase tracking-wider text-muted">
                 <th className="p-4 font-semibold">F. Emisión</th>
                 <th className="p-4 font-semibold">F. Cobro</th>
                 <th className="p-4 font-semibold">Vendedor</th>
                 <th className="p-4 font-semibold">Comprador</th>
                 <th className="p-4 font-semibold">Banco / Nro</th>
                 <th className="p-4 font-semibold">Estado</th>
-                <th className="p-4 font-semibold text-right">Importe</th>
+                <th className="p-4 text-right font-semibold">Importe</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="p-10 text-center text-[#64748b]">
+                <tr><td colSpan={7} className="p-10 text-center text-faint">
                   {hasActiveFilter ? '⚠ Sin resultados para los filtros actuales.' : 'No hay cheques ingresados.'}
                 </td></tr>
               ) : filtered.slice(0, checksVisible).map((c, idx) => {
-                const st = statusLabel[c.status] || { label: c.status, cls: 'bg-[#334155]/50 text-[#64748b]' };
+                const st = statusLabel[c.status] || { label: c.status, cls: 'bg-track text-muted' };
                 return (
-                  <tr key={c.id} className={`border-b border-[#334155]/30 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-[#0a1324]/30'}`}>
-                    <td className="p-4 text-[#d1dded]">{new Date(c.issue_date).toLocaleDateString('es-AR')}</td>
-                    <td className="p-4 text-[#0ea5e9] font-bold">{new Date(c.due_date).toLocaleDateString('es-AR')}</td>
-                    <td className="p-4 text-[#d1dded]">{getCheckSellerLabel(c)}</td>
-                    <td className="p-4 text-[#d1dded]">{getCheckBuyerLabel(c)}</td>
-                    <td className="p-4 text-[#d1dded]">
-                      {c.bank_name} <span className="text-[#64748b] ml-1 px-2 py-0.5 bg-[#141f32] rounded text-xs border border-[#334155]/50">#{c.check_number}</span>
+                  <tr key={c.id} className={`border-b border-line transition-colors hover:bg-row-hover ${idx % 2 === 0 ? 'bg-transparent' : 'bg-canvas'}`}>
+                    <td className="p-4 text-ink">{new Date(c.issue_date).toLocaleDateString('es-AR')}</td>
+                    <td className="p-4 font-bold text-accent">{new Date(c.due_date).toLocaleDateString('es-AR')}</td>
+                    <td className="p-4 text-ink">{getCheckSellerLabel(c)}</td>
+                    <td className="p-4 text-ink">{getCheckBuyerLabel(c)}</td>
+                    <td className="p-4 text-ink">
+                      {c.bank_name} <span className="ml-1 rounded border border-line bg-track px-2 py-0.5 text-xs text-muted">#{c.check_number}</span>
                     </td>
-                    <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${st.cls}`}>{st.label}</span></td>
-                    <td className="p-4 text-[#f8fafc] font-bold font-mono text-right">
+                    <td className="p-4"><span className={`rounded px-2 py-1 text-xs font-bold ${st.cls}`}>{st.label}</span></td>
+                    <td className="p-4 text-right font-mono font-bold text-ink">
                       $ {Number(c.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -375,56 +367,56 @@ export default function CheckTradePage() {
             </tbody>
           </table>
           {checksVisible < filtered.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setChecksVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setChecksVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({filtered.length - checksVisible} restantes)
               </button>
             </div>
           )}
-        </div>
+        </Card>
         {/* HISTORIAL DE OPERACIONES C/V CHEQUES */}
         <div className="mt-8">
-          <h2 className="text-lg font-bold text-[#f8fafc] mb-3 tracking-tight">Historial de Operaciones</h2>
-          <div className="glass-panel rounded-2xl overflow-x-auto border border-[#334155]/50 shadow-xl">
-            <table className="w-full text-left border-collapse">
+          <h2 className="mb-3 text-lg font-bold tracking-tight text-ink">Historial de Operaciones</h2>
+          <Card className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-[#334155]/50 bg-[#0a1324]/50 text-[#94a3b8] text-xs uppercase tracking-wider">
+                <tr className="border-b border-line bg-track text-xs uppercase tracking-wider text-muted">
                   <th className="p-4 font-semibold">Fecha</th>
                   <th className="p-4 font-semibold">Descripción</th>
                   <th className="p-4 font-semibold">Cliente</th>
                   <th className="p-4 font-semibold">N° Cheque</th>
                   <th className="p-4 font-semibold">Operador</th>
-                  <th className="p-4 font-semibold w-24"></th>
+                  <th className="w-24 p-4 font-semibold"></th>
                 </tr>
               </thead>
               <tbody>
                 {checkTradeTxs.length === 0 ? (
-                  <tr><td colSpan={6} className="p-8 text-center text-[#64748b]">No hay operaciones de compra/venta registradas.</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-faint">No hay operaciones de compra/venta registradas.</td></tr>
                 ) : checkTradeTxs.slice(0, opsVisible).map((t: any, idx: number) => {
                   const movs: any[] = t.movements || [];
                   const clients = [...new Map(movs.filter((m: any) => m.client?.name).map((m: any) => [m.client.id, m.client.name])).values()];
                   const checkNums = [...new Set(movs.filter((m: any) => m.check?.check_number).map((m: any) => m.check.check_number))];
                   return (
-                  <tr key={t.id} className={`border-b border-[#334155]/30 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-[#0a1324]/30'}`}>
-                    <td className="p-4 text-[#d1dded] whitespace-nowrap">{new Date(t.operation_date).toLocaleDateString('es-AR')}</td>
+                  <tr key={t.id} className={`border-b border-line transition-colors hover:bg-row-hover ${idx % 2 === 0 ? 'bg-transparent' : 'bg-canvas'}`}>
+                    <td className="whitespace-nowrap p-4 text-ink">{new Date(t.operation_date).toLocaleDateString('es-AR')}</td>
                     <td className="p-4">
-                      <p className={t.is_reversed ? 'text-[#677383] line-through' : 'text-[#d1dded]'}>{t.description}</p>
-                      {t.reversal_of && <span className="mt-1 inline-block text-[10px] text-[#7e8b9d] bg-[#2c394a] px-1.5 py-0.5 rounded border border-[#4d596b] font-bold uppercase tracking-wider">Reversión</span>}
+                      <p className={t.is_reversed ? 'text-faint line-through' : 'text-ink'}>{t.description}</p>
+                      {t.reversal_of && <span className="mt-1 inline-block rounded border border-line bg-track px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">Reversión</span>}
                     </td>
-                    <td className="p-4 text-[#94a3b8] text-sm">
-                      {clients.length > 0 ? clients.join(', ') : <span className="text-[#4d596b]">—</span>}
+                    <td className="p-4 text-sm text-muted">
+                      {clients.length > 0 ? clients.join(', ') : <span className="text-faint">—</span>}
                     </td>
-                    <td className="p-4 text-[#94a3b8] text-sm font-mono">
-                      {checkNums.length > 0 ? checkNums.join(', ') : <span className="text-[#4d596b]">—</span>}
+                    <td className="p-4 font-mono text-sm text-muted">
+                      {checkNums.length > 0 ? checkNums.join(', ') : <span className="text-faint">—</span>}
                     </td>
-                    <td className="p-4 text-[#64748b] text-sm">{t.user?.name || 'Sistema'}</td>
+                    <td className="p-4 text-sm text-faint">{t.user?.name || 'Sistema'}</td>
                     <td className="p-4 text-right">
                       {!t.is_reversed && !t.reversal_of && (
-                        <button onClick={() => setRevertTarget(t)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-medium">
+                        <button onClick={() => setRevertTarget(t)} className="rounded-lg border border-negative/30 px-3 py-1.5 text-xs font-medium text-negative transition-colors hover:bg-negative-bg">
                           Revertir
                         </button>
                       )}
-                      {t.is_reversed && <span className="text-[10px] text-red-400/70 font-bold uppercase tracking-wider">Revertida</span>}
+                      {t.is_reversed && <span className="text-[10px] font-bold uppercase tracking-wider text-negative/70">Revertida</span>}
                     </td>
                   </tr>
                   );
@@ -432,40 +424,41 @@ export default function CheckTradePage() {
               </tbody>
             </table>
             {opsVisible < checkTradeTxs.length && (
-              <div className="p-4 text-center border-t border-[#334155]/30">
-                <button onClick={() => setOpsVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+              <div className="border-t border-line p-4 text-center">
+                <button onClick={() => setOpsVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                   Ver más ({checkTradeTxs.length - opsVisible} restantes)
                 </button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
 
         {revertTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050B14]/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="glass-panel shadow-[0_0_50px_rgba(0,0,0,0.6)] border-t border-t-white/10 rounded-3xl w-full max-w-lg">
-              <div className="p-6 border-b border-[#334155]/50 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-[#f8fafc] tracking-tight">Revertir Transacción</h2>
-                <button onClick={() => setRevertTarget(null)} className="text-[#64748b] hover:text-white font-bold text-xl transition-colors">×</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-300">
+            <div className="w-full max-w-lg rounded-[14px] border border-line bg-surface shadow-2xl">
+              <div className="flex items-center justify-between border-b border-line p-6">
+                <h2 className="text-xl font-semibold tracking-tight text-ink">Revertir Transacción</h2>
+                <button onClick={() => setRevertTarget(null)} className="text-xl font-bold text-faint transition-colors hover:text-ink">×</button>
               </div>
-              <div className="p-6 space-y-4">
-                <p className="text-[#94a3b8] text-sm leading-relaxed">Esta acción creará asientos de contrapartida que <strong className="text-[#d1dded]">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="text-red-400 font-semibold">REVERTIDA</span>.</p>
-                <div className="bg-[#081329] border border-[#2c394a] rounded-xl px-4 py-3">
-                  <p className="text-xs text-[#64748b] uppercase tracking-wider mb-1">Operación a revertir</p>
-                  <p className="text-[#d1dded] font-medium">{revertTarget.description}</p>
-                  <p className="text-[#7e8b9d] text-xs mt-1">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
+              <div className="space-y-4 p-6">
+                <p className="text-sm leading-relaxed text-muted">Esta acción creará asientos de contrapartida que <strong className="text-ink">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="font-semibold text-negative">REVERTIDA</span>.</p>
+                <div className="rounded-xl border border-line bg-canvas px-4 py-3">
+                  <p className="mb-1 text-xs uppercase tracking-wider text-faint">Operación a revertir</p>
+                  <p className="font-medium text-ink">{revertTarget.description}</p>
+                  <p className="mt-1 text-xs text-faint">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
                 </div>
-                <p className="text-yellow-400/80 text-xs">⚠ Esta acción no puede deshacerse.</p>
+                <p className="text-xs text-warn">⚠ Esta acción no puede deshacerse.</p>
               </div>
-              <div className="p-6 border-t border-[#334155]/50 flex justify-end gap-3">
-                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 text-[#aab6c7] hover:text-white font-medium transition-colors">Cancelar</button>
-                <button onClick={handleRevert} disabled={reverting} className="bg-red-600/80 hover:bg-red-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg">
+              <div className="flex justify-end gap-3 border-t border-line p-6">
+                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 font-medium text-muted transition-colors hover:text-ink">Cancelar</button>
+                <button onClick={handleRevert} disabled={reverting} className="rounded-lg bg-negative px-6 py-2.5 font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50">
                   {reverting ? 'Revirtiendo...' : 'Confirmar Reversión'}
                 </button>
               </div>
             </div>
           </div>
-        )}      </div>
+        )}
+      </div>
     );
   }
 
@@ -473,22 +466,22 @@ export default function CheckTradePage() {
   const netToClient = isBuyOperation && commissionEnabled ? Math.max(totalChecks - commissionAmount, 0) : 0;
 
   return (
-    <div className="w-full animate-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-12">
+    <div className="mx-auto w-full max-w-5xl animate-in slide-in-from-bottom-8 duration-500 pb-12">
       <header className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold text-[#f8fafc] tracking-tight">Nueva Operación — Compra/Venta de Cheques</h1>
+        <div className="mb-2 flex items-center gap-3">
+          <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Nueva Operación — Compra/Venta de Cheques</h1>
           {isBuyOperation && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <span className="rounded-full bg-positive-bg px-3 py-1 text-xs font-bold text-positive">
               COMPRA
             </span>
           )}
           {isSellOperation && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+            <span className="rounded-full bg-accent-bg px-3 py-1 text-xs font-bold text-accent">
               VENTA
             </span>
           )}
         </div>
-        <p className="text-[#94a3b8]">
+        <p className="text-[13.5px] text-muted">
           {isBuyOperation
             ? 'La agencia adquiere los cheques. La comisión se registra como ingreso; el neto se le debe al cliente.'
             : isSellOperation
@@ -500,69 +493,68 @@ export default function CheckTradePage() {
       <form onSubmit={handleSubmit} className="space-y-5">
 
         {/* ── PASO 1: PARTES ──────────────────────────────────────────── */}
-        <div className="glass-panel p-6 rounded-2xl border border-[#334155]/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-[#0ea5e9]/8 pointer-events-none" />
-          <div className="flex items-center gap-2 mb-4 relative z-10">
-            <span className="w-6 h-6 rounded-full bg-[#0ea5e9] flex items-center justify-center text-xs font-bold text-black">1</span>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#64748b]">Partes de la Operación</h3>
+        <Card className="p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">1</span>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted">Partes de la Operación</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {/* VENDEDOR */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-400" />
-                <h3 className="text-xs font-bold uppercase tracking-widest text-red-400">Vendedor — Entrega Cheques</h3>
+                <span className="h-2 w-2 rounded-full bg-negative" />
+                <h3 className="text-xs font-bold uppercase tracking-widest text-negative">Vendedor — Entrega Cheques</h3>
               </div>
               <select required value={form.sellerId} onChange={e => setForm({ ...form, sellerId: e.target.value })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-400">
+                className={selectClass}>
                 <option value="">Seleccione vendedor...</option>
                 {partyOptions}
               </select>
               <input readOnly value={getPartyLabel(form.sellerId)} placeholder="Caja Vendedor"
-                className="w-full bg-[#050d1c] border border-[#1e2d40] rounded-lg px-4 py-2.5 text-[#64748b] cursor-not-allowed text-sm italic" />
+                className="w-full cursor-not-allowed rounded-lg border border-line bg-track px-4 py-2.5 text-sm italic text-faint" />
             </div>
 
             {/* COMPRADOR */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#0ea5e9]" />
-                <h3 className="text-xs font-bold uppercase tracking-widest text-[#0ea5e9]">Comprador — Recibe Cheques</h3>
+                <span className="h-2 w-2 rounded-full bg-accent" />
+                <h3 className="text-xs font-bold uppercase tracking-widest text-accent">Comprador — Recibe Cheques</h3>
               </div>
               <select required value={form.buyerId} onChange={e => setForm({ ...form, buyerId: e.target.value })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]">
+                className={selectClass}>
                 <option value="">Seleccione comprador...</option>
                 {partyOptions}
               </select>
               <input readOnly value={getPartyLabel(form.buyerId)} placeholder="Caja Comprador"
-                className="w-full bg-[#050d1c] border border-[#1e2d40] rounded-lg px-4 py-2.5 text-[#64748b] cursor-not-allowed text-sm italic" />
+                className="w-full cursor-not-allowed rounded-lg border border-line bg-track px-4 py-2.5 text-sm italic text-faint" />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-4 relative z-10">
+          <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Fecha</label>
+              <label className="mb-1 block text-sm font-medium text-muted">Fecha</label>
               <input type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                className={inputClass} />
             </div>
             <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Notas (Opcional)</label>
+              <label className="mb-1 block text-sm font-medium text-muted">Notas (Opcional)</label>
               <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 placeholder="Observaciones..."
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                className={inputClass} />
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* ── PASO 3: CHEQUES ─────────────────────────────────────────── */}
-        <div className="glass-panel rounded-2xl overflow-hidden border border-[#334155]/50">
-          <div className="bg-[#0a1324]/80 px-6 py-4 flex items-center justify-between border-b border-[#0ea5e9]/20">
+        {/* ── PASO 2: CHEQUES ─────────────────────────────────────────── */}
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line bg-canvas px-6 py-4">
             <div className="flex items-center gap-3">
-              <span className="w-6 h-6 rounded-full bg-[#0ea5e9] flex items-center justify-center text-xs font-bold text-black">2</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">2</span>
               <div>
-                <h3 className="font-bold text-[#f8fafc]">Cheques de la Operación</h3>
-                <p className="text-xs text-[#64748b]">
+                <h3 className="font-bold text-ink">Cheques de la Operación</h3>
+                <p className="text-xs text-muted">
                   {selectedChecks.length} seleccionado{selectedChecks.length !== 1 ? 's' : ''} · Total:
-                  <span className="text-[#0ea5e9] font-bold ml-1">
+                  <span className="ml-1 font-bold text-accent">
                     $ {totalChecks.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                   </span>
                 </p>
@@ -574,20 +566,20 @@ export default function CheckTradePage() {
           {clientPortfolioChecks.length === 0 ? (
             <div className="px-6 py-8 text-center">
               {!form.sellerId ? (
-                <p className="text-[#64748b] text-sm">Seleccioná el vendedor en el Paso 1 para ver sus cheques.</p>
+                <p className="text-sm text-faint">Seleccioná el vendedor en el Paso 1 para ver sus cheques.</p>
               ) : form.sellerId.startsWith('BOX:') ? (
                 <>
-                  <p className="text-3xl mb-3">📭</p>
-                  <p className="text-[#64748b] text-sm font-medium">La agencia no tiene cheques propios en cartera.</p>
-                  <p className="text-[#475569] text-xs mt-1">Comprá cheques a un cliente primero para poder revenderlos.</p>
+                  <p className="mb-3 text-3xl">📭</p>
+                  <p className="text-sm font-medium text-muted">La agencia no tiene cheques propios en cartera.</p>
+                  <p className="mt-1 text-xs text-faint">Comprá cheques a un cliente primero para poder revenderlos.</p>
                 </>
               ) : (
                 <>
-                  <p className="text-3xl mb-3">📭</p>
-                  <p className="text-[#64748b] text-sm font-medium">{selectedClient?.name} no tiene cheques pendientes de compra.</p>
-                  <p className="text-[#475569] text-xs mt-1">
+                  <p className="mb-3 text-3xl">📭</p>
+                  <p className="text-sm font-medium text-muted">{selectedClient?.name} no tiene cheques pendientes de compra.</p>
+                  <p className="mt-1 text-xs text-faint">
                     Ingresalos desde{' '}
-                    <a href="/dashboard/incomes" className="text-[#0ea5e9] hover:underline font-semibold">Ingreso de Valores → Cheque</a>.
+                    <a href="/dashboard/incomes" className="font-semibold text-accent hover:underline">Ingreso de Valores → Cheque</a>.
                   </p>
                 </>
               )}
@@ -595,24 +587,24 @@ export default function CheckTradePage() {
           ) : (
             <>
               {/* Toolbar */}
-              <div className="px-6 py-3 bg-[#0a1324]/40 border-t border-[#334155]/30 flex items-center justify-between">
+              <div className="flex items-center justify-between border-t border-line bg-canvas px-6 py-3">
                 <button type="button"
                   onClick={() => selectedChecks.length === clientPortfolioChecks.length
                     ? setSelectedChecks([])
                     : setSelectedChecks(clientPortfolioChecks)}
-                  className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+                  className="text-xs font-medium text-accent transition-colors hover:underline">
                   {selectedChecks.length === clientPortfolioChecks.length ? '✕ Deseleccionar todos' : '✓ Seleccionar todos'}
                 </button>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] text-xs">🔍</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-faint">🔍</span>
                   <input type="text" value={checkSearch} onChange={e => setCheckSearch(e.target.value)}
                     placeholder="Filtrar..."
-                    className="bg-[#081329] border border-[#2c394a] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#d1dded] focus:outline-none focus:border-[#0ea5e9] w-36" />
+                    className={`${inputClass} w-36 py-1.5 pl-8 text-xs`} />
                 </div>
               </div>
 
               {/* Check rows */}
-              <div className="divide-y divide-[#334155]/20 max-h-80 overflow-y-auto">
+              <div className="max-h-80 divide-y divide-line overflow-y-auto">
                 {clientPortfolioChecks
                   .filter(c =>
                     !checkSearch ||
@@ -625,27 +617,27 @@ export default function CheckTradePage() {
                     return (
                       <div key={c.id}
                         onClick={() => isSelected ? removeCheck(c.id) : addExistingCheck(c)}
-                        className={`flex items-center px-6 py-3 cursor-pointer transition-all duration-150 ${isSelected ? 'bg-emerald-500/5' : 'hover:bg-white/2'}`}>
+                        className={`flex cursor-pointer items-center px-6 py-3 transition-all duration-150 ${isSelected ? 'bg-positive-bg/50' : 'hover:bg-row-hover'}`}>
                         {/* Checkbox indicator */}
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-4 shrink-0 border transition-all duration-150 ${isSelected ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.15)]' : 'bg-[#0a1324] border-[#334155]/60'}`}>
-                          {isSelected && <span className="text-emerald-400 text-sm font-bold">✓</span>}
+                        <div className={`mr-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-all duration-150 ${isSelected ? 'border-positive bg-positive-bg' : 'border-line bg-canvas'}`}>
+                          {isSelected && <span className="text-sm font-bold text-positive">✓</span>}
                         </div>
                         {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#d1dded]">
-                            {c.bank_name} <span className="text-[#64748b] font-mono text-xs">#{c.check_number}</span>
-                            {c.source_client?.name && <span className="ml-2 text-[10px] text-[#475569]">· {c.source_client.name}</span>}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-ink">
+                            {c.bank_name} <span className="font-mono text-xs text-faint">#{c.check_number}</span>
+                            {c.source_client?.name && <span className="ml-2 text-[10px] text-faint">· {c.source_client.name}</span>}
                           </p>
-                          <p className="text-xs text-[#64748b]">Vto: {new Date(c.due_date).toLocaleDateString('es-AR')}</p>
+                          <p className="text-xs text-faint">Vto: {new Date(c.due_date).toLocaleDateString('es-AR')}</p>
                         </div>
                         {/* Amount */}
-                        <span className="font-bold font-mono text-[#f8fafc] text-sm mr-4">
+                        <span className="mr-4 font-mono text-sm font-bold text-ink">
                           $ {Number(c.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </span>
                         {/* X button */}
                         <button type="button"
                           onClick={e => { e.stopPropagation(); removeCheck(c.id); }}
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition-all border shrink-0 ${isSelected ? 'bg-red-500/10 hover:bg-red-500/25 text-red-400 hover:text-red-300 border-red-500/20' : 'opacity-0 pointer-events-none border-transparent'}`}>
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm transition-all ${isSelected ? 'border-negative/20 bg-negative-bg text-negative hover:opacity-80' : 'pointer-events-none border-transparent opacity-0'}`}>
                           ✕
                         </button>
                       </div>
@@ -655,16 +647,16 @@ export default function CheckTradePage() {
               </div>
             </>
           )}
-        </div>
+        </Card>
 
-        {/* ── PASO 4: COMISIÓN (Opcional) ─────────────────────────────── */}
-        <div className={`rounded-2xl overflow-hidden border transition-all duration-300 ${commissionEnabled ? 'border-amber-500/30 bg-amber-500/5' : 'border-[#334155]/50 glass-panel'}`}>
-          <div className="px-6 py-4 flex items-center justify-between">
+        {/* ── PASO 3: COMISIÓN (Opcional) ─────────────────────────────── */}
+        <div className={`overflow-hidden rounded-[14px] border transition-all duration-300 ${commissionEnabled ? 'border-warn/30 bg-warn-bg' : 'border-line bg-surface'}`}>
+          <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
-              <span className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-xs font-bold text-black">3</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-warn text-xs font-bold text-white">3</span>
               <div>
-                <h3 className="font-bold text-[#f8fafc] text-sm">Comisión (Opcional)</h3>
-                <p className="text-xs text-[#64748b]">
+                <h3 className="text-sm font-bold text-ink">Comisión (Opcional)</h3>
+                <p className="text-xs text-muted">
                   {isBuyOperation ? '📥 Ingreso para la agencia (se descuenta del neto al cliente)' : isSellOperation ? '📤 Gasto para la agencia (costo cobrado por el tercero)' : 'Aplicar comisión porcentual sobre el total de cheques.'}
                 </p>
               </div>
@@ -672,55 +664,55 @@ export default function CheckTradePage() {
             <button
               type="button"
               onClick={() => setCommissionEnabled(v => !v)}
-              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${commissionEnabled ? 'bg-amber-500' : 'bg-[#334155]'}`}
+              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${commissionEnabled ? 'bg-warn' : 'bg-line-hover'}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${commissionEnabled ? 'translate-x-5' : ''}`} />
+              <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${commissionEnabled ? 'translate-x-5' : ''}`} />
             </button>
           </div>
 
           {commissionEnabled && (
             <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Tipo</label>
+                  <label className="mb-2 block text-sm font-medium text-muted">Tipo</label>
                   <select value={commType} onChange={e => setCommType(e.target.value)}
-                    className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-400">
+                    className={selectClass}>
                     {Object.entries(COMMISSION_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Base (Total cheques)</label>
+                  <label className="mb-2 block text-sm font-medium text-muted">Base (Total cheques)</label>
                   <input readOnly value={`$ ${totalChecks.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
-                    className="w-full bg-[#050d1c] border border-[#1e2d40] rounded-lg px-4 py-3 text-[#64748b] cursor-not-allowed font-mono" />
+                    className="w-full cursor-not-allowed rounded-lg border border-line bg-track px-4 py-3 font-mono text-faint" />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Porcentaje (%)</label>
+                  <label className="mb-2 block text-sm font-medium text-muted">Porcentaje (%)</label>
                   <NumericFormat
                     value={commPercentage}
                     onValueChange={v => setCommPercentage(v.value)}
                     decimalSeparator="." suffix="%" decimalScale={4}
-                    className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-400"
+                    className={inputClass}
                     placeholder="Ej: 0.5"
                   />
                 </div>
               </div>
 
               {/* Result */}
-              <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-4 flex items-center justify-between">
-                <div className="text-[#94a3b8] text-sm">
+              <div className="flex items-center justify-between rounded-xl border border-warn/25 bg-warn-bg p-4">
+                <div className="text-sm text-muted">
                   $ {totalChecks.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  <span className="mx-2 text-[#475569]">×</span>
-                  <span className="text-amber-400 font-bold">{commPercentage || 0}%</span>
-                  <span className="mx-2 text-[#475569]">=</span>
+                  <span className="mx-2 text-faint">×</span>
+                  <span className="font-bold text-warn">{commPercentage || 0}%</span>
+                  <span className="mx-2 text-faint">=</span>
                 </div>
-                <p className="text-2xl font-bold font-mono text-amber-300">
+                <p className="font-mono text-2xl font-bold text-warn">
                   $ {commissionAmount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               {isBuyOperation && netToClient > 0 && (
-                <div className="mt-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
-                  <p className="text-sm text-[#64748b]">Neto a entregar al cliente (AP registrada)</p>
-                  <p className="text-xl font-bold font-mono text-emerald-400">
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-positive/20 bg-positive-bg p-4">
+                  <p className="text-sm text-muted">Neto a entregar al cliente (AP registrada)</p>
+                  <p className="font-mono text-xl font-bold text-positive">
                     $ {netToClient.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -730,24 +722,24 @@ export default function CheckTradePage() {
         </div>
 
         {/* ── FOOTER ──────────────────────────────────────────────────── */}
-        <div className="flex justify-between items-center pt-2">
+        <div className="flex items-center justify-between pt-2">
           <button type="button" onClick={() => setIsFormOpen(false)}
-            className="px-6 py-3 text-[#aab6c7] hover:text-white transition-colors font-medium">
+            className="px-6 py-3 font-medium text-muted transition-colors hover:text-ink">
             ← Volver
           </button>
           <div className="flex items-center gap-3">
             {commissionEnabled && commissionAmount > 0 && (
-              <p className="text-sm text-amber-400 font-medium">
+              <p className="text-sm font-medium text-warn">
                 + Comisión: $ {commissionAmount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </p>
             )}
             <button
               type="submit"
               disabled={loading || selectedChecks.length === 0}
-              className={`px-8 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${
+              className={`rounded-xl px-8 py-3 font-bold text-white shadow-sm transition-all duration-300 ${
                 (loading || selectedChecks.length === 0)
-                  ? 'opacity-40 cursor-not-allowed bg-gray-600'
-                  : 'bg-linear-to-r from-[#0ea5e9] to-[#0284c7] hover:scale-105 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)]'
+                  ? 'cursor-not-allowed bg-faint opacity-60'
+                  : 'bg-ink hover:opacity-85'
               }`}
             >
               {loading

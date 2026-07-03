@@ -5,6 +5,8 @@ import { getUserId } from '@/services/auth';
 import { NumericFormat } from 'react-number-format';
 import toast from 'react-hot-toast';
 import OverdraftConfirmModal, { OverdraftInfo } from '@/components/OverdraftConfirmModal';
+import { Card } from '@/components/ui/Card';
+import { inputClass, selectClass } from '@/components/ui/forms';
 
 export default function FXTradePage() {
   const [clients, setClients] = useState<any[]>([]);
@@ -257,102 +259,99 @@ export default function FXTradePage() {
   // ─── MASTER VIEW ──────────────────────────────────────────────────
   if (!isFormOpen) {
     return (
-      <div className="w-full animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto pb-8">
-        <header className="mb-6 flex justify-between items-end">
+      <div className="mx-auto w-full max-w-[1400px] animate-in fade-in duration-500 pb-8">
+        <header className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#f8fafc] mb-2 tracking-tight">Historial C/V Dólares</h1>
-            <p className="text-[#94a3b8]">Registro de operaciones de cambio cursadas en la filial.</p>
+            <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Historial C/V Dólares</h1>
+            <p className="mt-1 text-[13.5px] text-muted">Registro de operaciones de cambio cursadas en la filial.</p>
           </div>
-          <button onClick={() => setIsFormOpen(true)} className="px-6 py-3 bg-[#0ea5e9] hover:bg-[#0284c7] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#0ea5e9]/20 hover:shadow-[#0ea5e9]/40 hover:-translate-y-0.5">
+          <button onClick={() => setIsFormOpen(true)} className="rounded-[9px] bg-ink px-6 py-3 font-bold text-white shadow-sm transition-all hover:opacity-85">
             + Nueva Operación
           </button>
         </header>
 
         {/* TOTALES COMPRAS / VENTAS */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-2 gap-4">
           {/* COMPRAS */}
-          <div className="glass-panel rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] bg-emerald-500/10 pointer-events-none" />
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">Total Compras USD</p>
+          <Card className="p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-positive" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Total Compras USD</p>
             </div>
-            <p className="font-mono font-black text-2xl text-emerald-400">
+            <p className="font-mono text-2xl font-black text-positive">
               {fmtUSD(fxTotals.comprasUSD)}
             </p>
-            <p className="font-mono text-sm text-emerald-600 mt-1">
+            <p className="mt-1 font-mono text-sm text-muted">
               {fmtARS(fxTotals.comprasARS)} pagados
             </p>
-          </div>
+          </Card>
           {/* VENTAS */}
-          <div className="glass-panel rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] bg-amber-500/10 pointer-events-none" />
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Total Ventas USD</p>
+          <Card className="p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-warn" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Total Ventas USD</p>
             </div>
-            <p className="font-mono font-black text-2xl text-amber-400">
+            <p className="font-mono text-2xl font-black text-warn">
               {fmtUSD(fxTotals.ventasUSD)}
             </p>
-            <p className="font-mono text-sm text-amber-600 mt-1">
+            <p className="mt-1 font-mono text-sm text-muted">
               {fmtARS(fxTotals.ventasARS)} cobrados
             </p>
-          </div>
+          </Card>
         </div>
 
         {/* FILTER BAR */}
-        <div className="glass-panel rounded-2xl border border-[#334155]/50 p-5 mb-4 space-y-3">
+        <Card className="mb-4 space-y-3 p-5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">Filtros</p>
-            {hasFilter && <button onClick={() => { setFxSearch(''); setFxDateFrom(''); setFxDateTo(''); setFxOperator(''); }} className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">✕ Limpiar</button>}
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Filtros</p>
+            {hasFilter && <button onClick={() => { setFxSearch(''); setFxDateFrom(''); setFxDateTo(''); setFxOperator(''); }} className="text-xs font-medium text-accent transition-colors hover:underline">✕ Limpiar</button>}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="relative md:col-span-2">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-faint">🔍</span>
               <input type="text" value={fxSearch} onChange={e => setFxSearch(e.target.value)}
                 placeholder="Buscar en descripción..."
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9] transition-colors placeholder:text-[#334155]" />
+                className={`${inputClass} pl-9`} />
             </div>
-            <select value={fxOperator} onChange={e => setFxOperator(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]">
+            <select value={fxOperator} onChange={e => setFxOperator(e.target.value)} className={selectClass}>
               <option value="">Todos los operadores</option>
               {operatorNames.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Desde</label>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Desde</label>
                 <input type="date" value={fxDateFrom} onChange={e => setFxDateFrom(e.target.value)}
-                  className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-2 py-2 text-xs text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                  className={`${inputClass} px-2 py-2 text-xs`} />
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Hasta</label>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Hasta</label>
                 <input type="date" value={fxDateTo} onChange={e => setFxDateTo(e.target.value)}
-                  className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-2 py-2 text-xs text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
+                  className={`${inputClass} px-2 py-2 text-xs`} />
               </div>
             </div>
           </div>
+        </Card>
+
+        <div className="mb-3 flex items-center justify-between px-1">
+          <p className="text-sm text-muted"><span className="font-bold text-ink">{fxFiltered.length}</span> operación{fxFiltered.length !== 1 ? 'es' : ''}{hasFilter && <span className="ml-1 text-accent">(filtrado)</span>}</p>
         </div>
 
-        <div className="flex justify-between items-center mb-3 px-1">
-          <p className="text-sm text-[#64748b]"><span className="text-[#d1dded] font-bold">{fxFiltered.length}</span> operación{fxFiltered.length !== 1 ? 'es' : ''}{hasFilter && <span className="text-[#0ea5e9] ml-1">(filtrado)</span>}</p>
-        </div>
-
-        <div className="glass-panel rounded-2xl overflow-x-auto border border-[#334155]/50 shadow-xl">
-          <table className="w-full text-left border-collapse">
+        <Card className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[#334155]/50 bg-[#0a1324]/50 text-[#94a3b8] text-xs uppercase tracking-wider">
+              <tr className="border-b border-line bg-track text-xs uppercase tracking-wider text-muted">
                 <th className="p-4 font-semibold">Fecha</th>
                 <th className="p-4 font-semibold">Descripción / Operación</th>
-                <th className="p-4 font-semibold text-right">USD</th>
-                <th className="p-4 font-semibold text-right">ARS</th>
-                <th className="p-4 font-semibold text-right">T/C Pactada</th>
-                <th className="p-4 font-semibold text-right">Operador</th>
-                <th className="p-4 font-semibold w-24"></th>
+                <th className="p-4 text-right font-semibold">USD</th>
+                <th className="p-4 text-right font-semibold">ARS</th>
+                <th className="p-4 text-right font-semibold">T/C Pactada</th>
+                <th className="p-4 text-right font-semibold">Operador</th>
+                <th className="w-24 p-4 font-semibold"></th>
               </tr>
             </thead>
             <tbody>
               {fxFiltered.length === 0 ? (
-                <tr><td colSpan={7} className="p-8 text-center text-[#64748b]">{hasFilter ? '⚠ Sin resultados para los filtros actuales.' : 'No hay operaciones registradas.'}</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-faint">{hasFilter ? '⚠ Sin resultados para los filtros actuales.' : 'No hay operaciones registradas.'}</td></tr>
               ) : fxFiltered.slice(0, fxVisible).map((t, idx) => {
                 // Calcular montos USD y ARS de la operación
                 const movs: any[] = t.movements || [];
@@ -374,246 +373,249 @@ export default function FXTradePage() {
                   isSell = agUsd?.type === 'CREDIT'; // agencia entrega USD → vendió
                 }
                 return (
-                <tr key={t.id} className={`border-b border-[#334155]/30 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-[#0a1324]/30'}`}>
-                  <td className="p-4 text-[#d1dded]">{new Date(t.operation_date).toLocaleDateString()}</td>
-                  <td className="p-4 text-[#d1dded]">
+                <tr key={t.id} className={`border-b border-line transition-colors hover:bg-row-hover ${idx % 2 === 0 ? 'bg-transparent' : 'bg-canvas'}`}>
+                  <td className="p-4 text-ink">{new Date(t.operation_date).toLocaleDateString()}</td>
+                  <td className="p-4 text-ink">
                     {t.description?.startsWith('Ventanilla:') && (
-                      <span className="inline-block mr-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/15 text-amber-400 border border-amber-500/25">Ventanilla</span>
+                      <span className="mr-2 inline-block rounded bg-warn-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warn">Ventanilla</span>
                     )}
-                    <span className={t.is_reversed ? 'line-through text-[#677383]' : ''}>{t.description || '-'}</span>
-                    {t.reversal_of && <span className="ml-2 text-[10px] text-[#7e8b9d] bg-[#2c394a] px-1.5 py-0.5 rounded border border-[#4d596b] font-bold uppercase tracking-wider">Reversión</span>}
+                    <span className={t.is_reversed ? 'text-faint line-through' : ''}>{t.description || '-'}</span>
+                    {t.reversal_of && <span className="ml-2 rounded border border-line bg-track px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">Reversión</span>}
                   </td>
-                  <td className="p-4 font-bold font-mono text-right text-sky-300">
+                  <td className="p-4 text-right font-mono font-bold text-ink">
                     {isSell ? '-' : '+'} {fmtUSD(usdAmt)}
                   </td>
-                  <td className="p-4 font-bold font-mono text-right text-emerald-300">
+                  <td className="p-4 text-right font-mono font-bold text-ink">
                     {isSell ? '+' : '-'} {fmtARS(arsAmt)}
                   </td>
-                  <td className="p-4 text-emerald-400 font-bold font-mono text-right">$ {Number(t.exchange_rate || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
-                  <td className="p-4 text-[#64748b] text-right">{t.user?.name || 'Sistema'}</td>
+                  <td className="p-4 text-right font-mono font-bold text-accent">$ {Number(t.exchange_rate || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                  <td className="p-4 text-right text-muted">{t.user?.name || 'Sistema'}</td>
                   <td className="p-4 text-right">
                     {!t.is_reversed && !t.reversal_of && (
-                      <button onClick={() => setRevertTarget(t)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-medium">
+                      <button onClick={() => setRevertTarget(t)} className="rounded-lg border border-negative/30 px-3 py-1.5 text-xs font-medium text-negative transition-colors hover:bg-negative-bg">
                         Revertir
                       </button>
                     )}
-                    {t.is_reversed && <span className="text-[10px] text-red-400/70 font-bold uppercase tracking-wider">Revertida</span>}
+                    {t.is_reversed && <span className="text-[10px] font-bold uppercase tracking-wider text-negative/70">Revertida</span>}
                   </td>
                 </tr>
                 );
               })}
             </tbody>
-          </table>          {fxVisible < fxFiltered.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setFxVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+          </table>
+          {fxVisible < fxFiltered.length && (
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setFxVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({fxFiltered.length - fxVisible} restantes)
               </button>
             </div>
-          )}        </div>
+          )}
+        </Card>
         {revertTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050B14]/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="glass-panel shadow-[0_0_50px_rgba(0,0,0,0.6)] border-t border-t-white/10 rounded-3xl w-full max-w-lg">
-              <div className="p-6 border-b border-[#334155]/50 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-[#f8fafc] tracking-tight">Revertir Transacción</h2>
-                <button onClick={() => setRevertTarget(null)} className="text-[#64748b] hover:text-white font-bold text-xl transition-colors">×</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-300">
+            <div className="w-full max-w-lg rounded-[14px] border border-line bg-surface shadow-2xl">
+              <div className="flex items-center justify-between border-b border-line p-6">
+                <h2 className="text-xl font-semibold tracking-tight text-ink">Revertir Transacción</h2>
+                <button onClick={() => setRevertTarget(null)} className="text-xl font-bold text-faint transition-colors hover:text-ink">×</button>
               </div>
-              <div className="p-6 space-y-4">
-                <p className="text-[#94a3b8] text-sm leading-relaxed">Esta acción creará asientos de contrapartida que <strong className="text-[#d1dded]">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="text-red-400 font-semibold">REVERTIDA</span>.</p>
-                <div className="bg-[#081329] border border-[#2c394a] rounded-xl px-4 py-3">
-                  <p className="text-xs text-[#64748b] uppercase tracking-wider mb-1">Operación a revertir</p>
-                  <p className="text-[#d1dded] font-medium">{revertTarget.description}</p>
-                  <p className="text-[#7e8b9d] text-xs mt-1">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
+              <div className="space-y-4 p-6">
+                <p className="text-sm leading-relaxed text-muted">Esta acción creará asientos de contrapartida que <strong className="text-ink">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="font-semibold text-negative">REVERTIDA</span>.</p>
+                <div className="rounded-xl border border-line bg-canvas px-4 py-3">
+                  <p className="mb-1 text-xs uppercase tracking-wider text-faint">Operación a revertir</p>
+                  <p className="font-medium text-ink">{revertTarget.description}</p>
+                  <p className="mt-1 text-xs text-faint">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
                 </div>
-                <p className="text-yellow-400/80 text-xs">⚠ Esta acción no puede deshacerse.</p>
+                <p className="text-xs text-warn">⚠ Esta acción no puede deshacerse.</p>
               </div>
-              <div className="p-6 border-t border-[#334155]/50 flex justify-end gap-3">
-                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 text-[#aab6c7] hover:text-white font-medium transition-colors">Cancelar</button>
-                <button onClick={handleRevert} disabled={reverting} className="bg-red-600/80 hover:bg-red-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg">
+              <div className="flex justify-end gap-3 border-t border-line p-6">
+                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 font-medium text-muted transition-colors hover:text-ink">Cancelar</button>
+                <button onClick={handleRevert} disabled={reverting} className="rounded-lg bg-negative px-6 py-2.5 font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50">
                   {reverting ? 'Revirtiendo...' : 'Confirmar Reversión'}
                 </button>
               </div>
             </div>
           </div>
-        )}      </div>
+        )}
+      </div>
     );
   }
 
   // ─── FORM VIEW ────────────────────────────────────────────────────
   return (
-    <div className="w-full animate-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-12">
+    <div className="mx-auto w-full max-w-5xl animate-in slide-in-from-bottom-8 duration-500 pb-12">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-[#f8fafc] mb-1 tracking-tight">Nueva Operación — Compra/Venta de Dólares</h1>
-        <p className="text-[#94a3b8]">Indicá Vendedor y Comprador. Las cajas se completan automáticamente.</p>
+        <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Nueva Operación — Compra/Venta de Dólares</h1>
+        <p className="mt-1 text-[13.5px] text-muted">Indicá Vendedor y Comprador. Las cajas se completan automáticamente.</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="glass-panel p-8 rounded-2xl shadow-xl border-t border-t-white/10 relative overflow-hidden space-y-8">
-        <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-[100px] bg-[#0ea5e9]/8 pointer-events-none"></div>
+      <form onSubmit={handleSubmit}>
+        <Card className="space-y-8 p-8">
+          {/* MODE TOGGLE */}
+          <div className="flex items-center gap-3 rounded-2xl border border-line bg-canvas p-4">
+            <button type="button"
+              onClick={() => setVentanilla(false)}
+              className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
+                !ventanilla
+                  ? 'bg-ink text-white shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}>
+              📊 Operación con Cliente
+            </button>
+            <button type="button"
+              onClick={() => setVentanilla(true)}
+              className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
+                ventanilla
+                  ? 'bg-warn text-white shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}>
+              🧑‍💼 Ventanilla (Mostrador)
+            </button>
+          </div>
 
-        {/* MODE TOGGLE */}
-        <div className="flex items-center gap-3 bg-[#0a1324]/60 border border-[#334155]/50 rounded-2xl p-4 relative z-10">
-          <button type="button"
-            onClick={() => setVentanilla(false)}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              !ventanilla
-                ? 'bg-[#0ea5e9] text-white shadow-lg shadow-[#0ea5e9]/20'
-                : 'text-[#64748b] hover:text-[#94a3b8]'
-            }`}>
-            📊 Operación con Cliente
-          </button>
-          <button type="button"
-            onClick={() => setVentanilla(true)}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              ventanilla
-                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
-                : 'text-[#64748b] hover:text-[#94a3b8]'
-            }`}>
-            🧑‍💼 Ventanilla (Mostrador)
-          </button>
-        </div>
-
-        {/* VENTANILLA MODE */}
-        {ventanilla ? (
-          <div className="relative z-10 space-y-5">
-            {/* Operation type */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-[#64748b] mb-3">Tipo de operación</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button type="button"
-                  onClick={() => setVentanillaOp('BUY')}
-                  className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                    ventanillaOp === 'BUY'
-                      ? 'border-emerald-500/60 bg-emerald-500/10'
-                      : 'border-[#334155]/50 bg-[#0a1324]/40 hover:border-[#334155]/80'
-                  }`}>
-                  <p className="text-2xl mb-2">💵→💵</p>
-                  <p className={`font-bold text-sm ${ventanillaOp === 'BUY' ? 'text-emerald-300' : 'text-[#94a3b8]'}`}>
-                    Cliente trae USD
-                  </p>
-                  <p className="text-xs text-[#64748b] mt-0.5">Agencia compra USD · entrega ARS</p>
-                </button>
-                <button type="button"
-                  onClick={() => setVentanillaOp('SELL')}
-                  className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                    ventanillaOp === 'SELL'
-                      ? 'border-sky-500/60 bg-sky-500/10'
-                      : 'border-[#334155]/50 bg-[#0a1324]/40 hover:border-[#334155]/80'
-                  }`}>
-                  <p className="text-2xl mb-2">💵←💵</p>
-                  <p className={`font-bold text-sm ${ventanillaOp === 'SELL' ? 'text-sky-300' : 'text-[#94a3b8]'}`}>
-                    Cliente trae ARS
-                  </p>
-                  <p className="text-xs text-[#64748b] mt-0.5">Agencia vende USD · recibe ARS</p>
-                </button>
+          {/* VENTANILLA MODE */}
+          {ventanilla ? (
+            <div className="space-y-5">
+              {/* Operation type */}
+              <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted">Tipo de operación</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button"
+                    onClick={() => setVentanillaOp('BUY')}
+                    className={`rounded-2xl border-2 p-4 text-left transition-all ${
+                      ventanillaOp === 'BUY'
+                        ? 'border-positive bg-positive-bg'
+                        : 'border-line bg-canvas hover:border-line-hover'
+                    }`}>
+                    <p className="mb-2 text-2xl">💵→💵</p>
+                    <p className={`text-sm font-bold ${ventanillaOp === 'BUY' ? 'text-positive' : 'text-muted'}`}>
+                      Cliente trae USD
+                    </p>
+                    <p className="mt-0.5 text-xs text-faint">Agencia compra USD · entrega ARS</p>
+                  </button>
+                  <button type="button"
+                    onClick={() => setVentanillaOp('SELL')}
+                    className={`rounded-2xl border-2 p-4 text-left transition-all ${
+                      ventanillaOp === 'SELL'
+                        ? 'border-accent bg-accent-bg'
+                        : 'border-line bg-canvas hover:border-line-hover'
+                    }`}>
+                    <p className="mb-2 text-2xl">💵←💵</p>
+                    <p className={`text-sm font-bold ${ventanillaOp === 'SELL' ? 'text-accent' : 'text-muted'}`}>
+                      Cliente trae ARS
+                    </p>
+                    <p className="mt-0.5 text-xs text-faint">Agencia vende USD · recibe ARS</p>
+                  </button>
+                </div>
+              </div>
+              {/* Optional reference name */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-muted">
+                  Referencia del cliente (opcional)
+                </label>
+                <input type="text" value={ventanillaName}
+                  onChange={e => setVentanillaName(e.target.value)}
+                  placeholder="Nombre o referencia para identificar la operación..."
+                  className={inputClass} />
               </div>
             </div>
-            {/* Optional reference name */}
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">
-                Referencia del cliente (opcional)
-              </label>
-              <input type="text" value={ventanillaName}
-                onChange={e => setVentanillaName(e.target.value)}
-                placeholder="Nombre o referencia para identificar la operación..."
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-500" />
+          ) : (
+          /* CLIENT MODE — original Vendedor/Comprador cards */
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* VENDEDOR */}
+            <div className="space-y-4 rounded-2xl border border-line bg-canvas p-5">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-negative">Vendedor — Entrega USD</h3>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-muted">Nombre</label>
+                <select required={!ventanilla} value={form.sellerId} onChange={e => setForm({ ...form, sellerId: e.target.value })}
+                  className={selectClass}>
+                  <option value="">Seleccione vendedor...</option>
+                  {partyOptions}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-muted">Caja Vendedor</label>
+                <input readOnly value={getPartyLabel(form.sellerId)}
+                  className="w-full cursor-not-allowed rounded-[9px] border border-line bg-track px-4 py-2.5 font-medium italic text-faint" />
+              </div>
+            </div>
+
+            {/* COMPRADOR */}
+            <div className="space-y-4 rounded-2xl border border-line bg-canvas p-5">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-positive">Comprador — Recibe USD</h3>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-muted">Nombre</label>
+                <select required={!ventanilla} value={form.buyerId} onChange={e => setForm({ ...form, buyerId: e.target.value })}
+                  className={selectClass}>
+                  <option value="">Seleccione comprador...</option>
+                  {partyOptions}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-muted">Caja Comprador</label>
+                <input readOnly value={getPartyLabel(form.buyerId)}
+                  className="w-full cursor-not-allowed rounded-[9px] border border-line bg-track px-4 py-2.5 font-medium italic text-faint" />
+              </div>
             </div>
           </div>
-        ) : (
-        /* CLIENT MODE — original Vendedor/Comprador cards */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-          {/* VENDEDOR */}
-          <div className="bg-[#0a1324]/60 border border-[#334155]/60 rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-red-400">Vendedor — Entrega USD</h3>
+          )}
+
+          {/* NÚMEROS */}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-canvas p-5">
+              <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-accent">Monto (USD)</label>
+              <NumericFormat value={form.usdAmount} onValueChange={v => setForm({ ...form, usdAmount: v.value })}
+                thousandSeparator="," decimalSeparator="." prefix="U$S "
+                className="w-full border-b-2 border-line bg-transparent py-1 text-3xl font-bold text-ink transition-colors focus:border-accent focus:outline-none"
+                placeholder="U$S 0.00" />
+            </div>
+            <div className="rounded-2xl border border-line bg-canvas p-5">
+              <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-muted">Cotización (T/C)</label>
+              <NumericFormat value={form.exchangeRate} onValueChange={v => setForm({ ...form, exchangeRate: v.value })}
+                thousandSeparator="," decimalSeparator="." prefix="$ "
+                className="w-full border-b-2 border-line bg-transparent py-1 text-3xl font-bold text-ink transition-colors focus:border-ink focus:outline-none"
+                placeholder="$ 0.00" />
+            </div>
+          </div>
+
+          {/* TOTAL */}
+          <div className="rounded-2xl border border-accent/30 bg-accent-bg p-6">
+            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-accent">Total ARS Calculado</p>
+            <p className="text-4xl font-bold text-ink">$ {calculatedArs.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+          </div>
+
+          {/* META */}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Nombre</label>
-              <select required={!ventanilla} value={form.sellerId} onChange={e => setForm({ ...form, sellerId: e.target.value })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-400 transition-colors">
-                <option value="">Seleccione vendedor...</option>
-                {partyOptions}
+              <label className="mb-1 block text-sm font-medium text-muted">Fecha Operación</label>
+              <input type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
+                className={inputClass} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-muted">Notas (Opcional)</label>
+              <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder="Observaciones de la operación..."
+                className={inputClass} />
+            </div>
+          </div>
+
+          {agencyBoxes.length > 1 && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-muted">Caja Interna de Contabilización</label>
+              <select value={form.agencyBoxId} onChange={e => setForm({ ...form, agencyBoxId: e.target.value })}
+                className={selectClass}>
+                {agencyBoxes.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Caja Vendedor</label>
-              <input readOnly value={getPartyLabel(form.sellerId)}
-                className="w-full bg-[#050d1c] border border-[#1e2d40] rounded-lg px-4 py-3 text-[#64748b] cursor-not-allowed font-medium italic" />
-            </div>
-          </div>
+          )}
 
-          {/* COMPRADOR */}
-          <div className="bg-[#0a1324]/60 border border-[#334155]/60 rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400">Comprador — Recibe USD</h3>
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Nombre</label>
-              <select required={!ventanilla} value={form.buyerId} onChange={e => setForm({ ...form, buyerId: e.target.value })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-emerald-400 transition-colors">
-                <option value="">Seleccione comprador...</option>
-                {partyOptions}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Caja Comprador</label>
-              <input readOnly value={getPartyLabel(form.buyerId)}
-                className="w-full bg-[#050d1c] border border-[#1e2d40] rounded-lg px-4 py-3 text-[#64748b] cursor-not-allowed font-medium italic" />
-            </div>
+          <div className="flex justify-end space-x-4 border-t border-line pt-4">
+            <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 font-medium text-muted transition-colors hover:text-ink">Volver</button>
+            <button type="submit" disabled={loading}
+              className={`rounded-xl px-8 py-3 font-bold text-white shadow-sm transition-all duration-300 ${loading ? 'cursor-not-allowed bg-faint opacity-60' : 'bg-ink hover:opacity-85'}`}>
+              {loading ? 'Procesando...' : 'Confirmar Operación'}
+            </button>
           </div>
-        </div>
-        )}
-
-        {/* NÚMEROS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
-          <div className="bg-[#141f32]/50 border border-[#2c394a] rounded-2xl p-5">
-            <label className="block text-xs uppercase font-bold text-[#0ea5e9] mb-3 tracking-wider">Monto (USD)</label>
-            <NumericFormat value={form.usdAmount} onValueChange={v => setForm({ ...form, usdAmount: v.value })}
-              thousandSeparator="," decimalSeparator="." prefix="U$S "
-              className="w-full bg-transparent border-b-2 border-[#334155] focus:border-[#0ea5e9] text-3xl text-[#f8fafc] font-bold py-1 focus:outline-none transition-colors"
-              placeholder="U$S 0.00" />
-          </div>
-          <div className="bg-[#141f32]/50 border border-[#2c394a] rounded-2xl p-5">
-            <label className="block text-xs uppercase font-bold text-[#64748b] mb-3 tracking-wider">Cotización (T/C)</label>
-            <NumericFormat value={form.exchangeRate} onValueChange={v => setForm({ ...form, exchangeRate: v.value })}
-              thousandSeparator="," decimalSeparator="." prefix="$ "
-              className="w-full bg-transparent border-b-2 border-[#334155] focus:border-[#94a3b8] text-3xl text-[#d1dded] font-bold py-1 focus:outline-none transition-colors"
-              placeholder="$ 0.00" />
-          </div>
-        </div>
-
-        {/* TOTAL */}
-        <div className="bg-[#081329] border border-emerald-500/30 rounded-2xl p-6 relative z-10">
-          <p className="text-xs uppercase font-bold text-emerald-400 mb-1 tracking-wider">Total ARS Calculado</p>
-          <p className="text-4xl font-bold text-[#f8fafc]">$ {calculatedArs.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-        </div>
-
-        {/* META */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
-          <div>
-            <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Fecha Operación</label>
-            <input type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
-              className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
-          </div>
-          <div>
-            <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Notas (Opcional)</label>
-            <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              placeholder="Observaciones de la operación..."
-              className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]" />
-          </div>
-        </div>
-
-        {agencyBoxes.length > 1 && (
-          <div className="relative z-10">
-            <label className="block text-sm text-[#aab6c7] mb-1 font-medium">Caja Interna de Contabilización</label>
-            <select value={form.agencyBoxId} onChange={e => setForm({ ...form, agencyBoxId: e.target.value })}
-              className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]">
-              {agencyBoxes.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </div>
-        )}
-
-        <div className="pt-4 border-t border-[#334155]/50 flex justify-end space-x-4 relative z-10">
-          <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 text-[#aab6c7] hover:text-white transition-colors font-medium">Volver</button>
-          <button type="submit" disabled={loading}
-            className={`px-8 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${loading ? 'opacity-50 cursor-not-allowed bg-gray-500' : 'bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] hover:scale-105 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)]'}`}>
-            {loading ? 'Procesando...' : 'Confirmar Operación'}
-          </button>
-        </div>
+        </Card>
       </form>
 
       {overdraftData && (

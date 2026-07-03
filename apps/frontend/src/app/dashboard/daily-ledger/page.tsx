@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchApi } from '@/services/api';
+import { Card } from '@/components/ui/Card';
+import { inputClass } from '@/components/ui/forms';
 
 // Argentina es UTC-3 fijo (sin cambio de horario de verano)
 const todayArg = () =>
@@ -88,18 +90,18 @@ export default function DailyLedgerPage() {
 
   const typeBadge = (type: string) => {
     const map: Record<string, string> = {
-      INCOME:    'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-      OUTCOME:   'bg-red-500/15 text-red-400 border-red-500/30',
-      TRANSFER:  'bg-sky-500/15 text-sky-400 border-sky-500/30',
-      FX_TRADE:  'bg-amber-500/15 text-amber-400 border-amber-500/30',
-      CHECK_TRADE:'bg-violet-500/15 text-violet-400 border-violet-500/30',
+      INCOME:     'bg-positive-bg text-positive',
+      OUTCOME:    'bg-negative-bg text-negative',
+      TRANSFER:   'bg-track text-muted',
+      FX_TRADE:   'bg-warn-bg text-warn',
+      CHECK_TRADE:'bg-accent-bg text-accent',
     };
     const labels: Record<string, string> = {
       INCOME: 'Ingreso', OUTCOME: 'Egreso', TRANSFER: 'Transferencia',
       FX_TRADE: 'FX', CHECK_TRADE: 'Cheques',
     };
     return (
-      <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${map[type] ?? 'bg-white/5 text-[#94a3b8] border-white/10'}`}>
+      <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${map[type] ?? 'bg-track text-muted'}`}>
         {labels[type] ?? type}
       </span>
     );
@@ -108,28 +110,28 @@ export default function DailyLedgerPage() {
   const isToday = selectedDate === todayArg();
 
   return (
-    <div className="w-full animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto pb-10">
+    <div className="mx-auto w-full max-w-[1400px] animate-in fade-in duration-500 pb-10">
       {/* Header */}
-      <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f8fafc] mb-1 tracking-tight">Caja Diaria</h1>
-          <p className="text-[#94a3b8]">
+          <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Caja Diaria</h1>
+          <p className="mt-1 text-[13.5px] text-muted">
             Movimientos de caja del día — ingresos y egresos de efectivo.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-[#64748b]">Fecha</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-muted">Fecha</label>
           <input
             type="date"
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
             max={todayArg()}
-            className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-[#0ea5e9]"
+            className={`${inputClass} w-auto py-2`}
           />
           {!isToday && (
             <button
               onClick={() => setSelectedDate(todayArg())}
-              className="px-4 py-2.5 text-xs bg-[#0ea5e9]/10 border border-[#0ea5e9]/30 rounded-lg text-[#0ea5e9] hover:bg-[#0ea5e9]/20 transition font-semibold"
+              className="rounded-lg border border-accent/30 bg-accent-bg px-4 py-2.5 text-xs font-semibold text-accent transition hover:opacity-80"
             >
               Hoy
             </button>
@@ -138,112 +140,86 @@ export default function DailyLedgerPage() {
       </header>
 
       {/* ── Tarjetas CAJA EFECTIVA ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+      <div className="mb-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Ingresos ARS',  value: fmt(incomeTotals.ARS, 'ARS'),  color: 'emerald', icon: '↑' },
-          { label: 'Ingresos USD',  value: fmt(incomeTotals.USD, 'USD'),  color: 'emerald', icon: '↑' },
-          { label: 'Egresos ARS',   value: fmt(outcomeTotals.ARS, 'ARS'), color: 'red',     icon: '↓' },
-          { label: 'Egresos USD',   value: fmt(outcomeTotals.USD, 'USD'), color: 'red',     icon: '↓' },
+          { label: 'Ingresos ARS',  value: fmt(incomeTotals.ARS, 'ARS'),  positive: true,  icon: '↑' },
+          { label: 'Ingresos USD',  value: fmt(incomeTotals.USD, 'USD'),  positive: true,  icon: '↑' },
+          { label: 'Egresos ARS',   value: fmt(outcomeTotals.ARS, 'ARS'), positive: false, icon: '↓' },
+          { label: 'Egresos USD',   value: fmt(outcomeTotals.USD, 'USD'), positive: false, icon: '↓' },
         ].map(card => (
-          <div
-            key={card.label}
-            className={`glass-panel rounded-2xl p-5 border ${
-              card.color === 'emerald'
-                ? 'border-emerald-500/20 bg-emerald-500/5'
-                : 'border-red-500/20 bg-red-500/5'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">{card.label}</p>
-              <span className={`text-lg font-black ${card.color === 'emerald' ? 'text-emerald-400' : 'text-red-400'}`}>
+          <Card key={card.label} className="p-5">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted">{card.label}</p>
+              <span className={`text-lg font-black ${card.positive ? 'text-positive' : 'text-negative'}`}>
                 {card.icon}
               </span>
             </div>
-            <p className={`text-xl font-bold font-mono ${card.color === 'emerald' ? 'text-emerald-300' : 'text-red-300'}`}>
+            <p className={`font-mono text-xl font-bold ${card.positive ? 'text-positive' : 'text-negative'}`}>
               {card.value}
             </p>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* ── Saldo del día ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {[
-          {
-            label: 'Saldo ARS',
-            value: cumulativeBalance?.ARS ?? 0,
-            cur: 'ARS',
-          },
-          {
-            label: 'Saldo USD',
-            value: cumulativeBalance?.USD ?? 0,
-            cur: 'USD',
-          },
+          { label: 'Saldo ARS', value: cumulativeBalance?.ARS ?? 0, cur: 'ARS' },
+          { label: 'Saldo USD', value: cumulativeBalance?.USD ?? 0, cur: 'USD' },
         ].map(card => {
           const positive = card.value >= 0;
           return (
-            <div
-              key={card.label}
-              className={`glass-panel rounded-2xl p-5 border ${
-                positive ? 'border-sky-500/25 bg-sky-500/5' : 'border-orange-500/25 bg-orange-500/5'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">{card.label}</p>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  positive ? 'bg-sky-500/15 text-sky-400' : 'bg-orange-500/15 text-orange-400'
-                }`}>
+            <Card key={card.label} className="p-5">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted">{card.label}</p>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${positive ? 'bg-accent-bg text-accent' : 'bg-warn-bg text-warn'}`}>
                   Saldo Acumulado
                 </span>
               </div>
-              <p className={`text-2xl font-black font-mono ${
-                positive ? 'text-sky-300' : 'text-orange-300'
-              }`}>
+              <p className={`font-mono text-2xl font-black ${positive ? 'text-accent' : 'text-warn'}`}>
                 {positive ? '' : '−'}{fmt(Math.abs(card.value), card.cur)}
               </p>
-            </div>
+            </Card>
           );
         })}
       </div>
       {/* ── Resultado Diario (P&L) ── */}
       {pl && (
-        <div className={`glass-panel rounded-2xl p-5 mb-6 border ${
-          pl.netResult >= 0 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
-        }`}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-3">Resultado del Día</p>
+        <Card className="mb-6 p-5">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">Resultado del Día</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-[11px] text-[#64748b] mb-1">Ingresos (comisiones + efectivo)</p>
-              <p className="text-lg font-bold font-mono text-emerald-400">
+              <p className="mb-1 text-[11px] text-faint">Ingresos (comisiones + efectivo)</p>
+              <p className="font-mono text-lg font-bold text-positive">
                 $ {pl.totalIncome.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-[#64748b] mb-1">Gastos (costos + egresos)</p>
-              <p className="text-lg font-bold font-mono text-red-400">
+              <p className="mb-1 text-[11px] text-faint">Gastos (costos + egresos)</p>
+              <p className="font-mono text-lg font-bold text-negative">
                 $ {pl.totalExpense.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className={`rounded-xl p-3 ${pl.netResult >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-              <p className="text-[11px] text-[#64748b] mb-1">Ganancia Neta</p>
-              <p className={`text-2xl font-bold font-mono ${pl.netResult >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+            <div className={`rounded-xl p-3 ${pl.netResult >= 0 ? 'bg-positive-bg' : 'bg-negative-bg'}`}>
+              <p className="mb-1 text-[11px] text-faint">Ganancia Neta</p>
+              <p className={`font-mono text-2xl font-bold ${pl.netResult >= 0 ? 'text-positive' : 'text-negative'}`}>
                 {pl.netResult >= 0 ? '+' : ''}$ {pl.netResult.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Transactions table */}
-      <div className="glass-panel rounded-2xl overflow-x-auto border border-[#334155]/50 shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#334155]/50">
-          <p className="text-sm font-bold text-[#d1dded]">
+      <Card className="overflow-x-auto">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <p className="text-sm font-bold text-ink">
             {loading ? 'Cargando…' : `${transactions.length} movimiento${transactions.length !== 1 ? 's' : ''} · ${isToday ? 'Hoy' : formatDate(selectedDate)}`}
           </p>
           <button
             onClick={load}
             disabled={loading}
-            className="text-xs px-3 py-1.5 rounded-lg bg-[#0ea5e9]/10 border border-[#0ea5e9]/30 text-[#0ea5e9] hover:bg-[#0ea5e9]/20 transition font-semibold disabled:opacity-50"
+            className="rounded-lg border border-accent/30 bg-accent-bg px-3 py-1.5 text-xs font-semibold text-accent transition hover:opacity-80 disabled:opacity-50"
           >
             {loading ? '…' : '↺ Actualizar'}
           </button>
@@ -251,23 +227,23 @@ export default function DailyLedgerPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full border-2 border-[#0ea5e9] border-t-transparent animate-spin" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
           </div>
         ) : cashTransactions.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-4xl mb-3">📋</p>
-            <p className="text-[#64748b] font-medium">Sin movimientos en esta fecha.</p>
+            <p className="mb-3 text-4xl">📋</p>
+            <p className="font-medium text-faint">Sin movimientos en esta fecha.</p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[#334155]/50 bg-[#0a1324]/50 text-[#94a3b8] text-xs uppercase tracking-wider">
+              <tr className="border-b border-line bg-track text-xs uppercase tracking-wider text-muted">
                 <th className="p-4 font-semibold">Hora</th>
                 <th className="p-4 font-semibold">Tipo</th>
                 <th className="p-4 font-semibold">Descripción</th>
                 <th className="p-4 font-semibold">Cliente</th>
                 <th className="p-4 font-semibold">Operador</th>
-                <th className="p-4 font-semibold text-right">Importe</th>
+                <th className="p-4 text-right font-semibold">Importe</th>
               </tr>
             </thead>
             <tbody>
@@ -278,13 +254,13 @@ export default function DailyLedgerPage() {
                 const amount = Number(boxMov?.amount || 0);
                 const isIncome = t.type === 'INCOME';
                 return (
-                  <tr key={t.id} className={`border-b border-[#334155]/30 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-[#0a1324]/30'}`}>
-                    <td className="p-4 text-[#64748b] text-sm font-mono whitespace-nowrap">{formatTime(t.created_at)}</td>
+                  <tr key={t.id} className={`border-b border-line transition-colors hover:bg-row-hover ${idx % 2 === 0 ? 'bg-transparent' : 'bg-canvas'}`}>
+                    <td className="whitespace-nowrap p-4 font-mono text-sm text-faint">{formatTime(t.created_at)}</td>
                     <td className="p-4">{typeBadge(t.type)}</td>
-                    <td className="p-4 text-[#d1dded] text-sm max-w-50 truncate">{t.description}</td>
-                    <td className="p-4 text-[#94a3b8] text-sm">{boxMov?.client?.name || '—'}</td>
-                    <td className="p-4 text-[#94a3b8] text-sm">{t.user?.name || '—'}</td>
-                    <td className={`p-4 font-bold font-mono text-right text-sm ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <td className="max-w-50 truncate p-4 text-sm text-ink">{t.description}</td>
+                    <td className="p-4 text-sm text-muted">{boxMov?.client?.name || '—'}</td>
+                    <td className="p-4 text-sm text-muted">{t.user?.name || '—'}</td>
+                    <td className={`p-4 text-right font-mono text-sm font-bold ${isIncome ? 'text-positive' : 'text-negative'}`}>
                       {isIncome ? '+' : '-'} {fmt(amount, boxMov?.currency || 'ARS')}
                     </td>
                   </tr>
@@ -293,7 +269,7 @@ export default function DailyLedgerPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

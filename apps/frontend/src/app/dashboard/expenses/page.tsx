@@ -6,6 +6,8 @@ import { NumericFormat } from 'react-number-format';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import OverdraftConfirmModal, { OverdraftInfo } from '@/components/OverdraftConfirmModal';
+import { Card } from '@/components/ui/Card';
+import { inputClass, selectClass } from '@/components/ui/forms';
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -15,7 +17,7 @@ export default function ExpensesPage() {
   const [overdraftData, setOverdraftData] = useState<{ overdrafts: OverdraftInfo[]; payload: any } | null>(null);
   const [revertTarget, setRevertTarget] = useState<any | null>(null);
   const [reverting, setReverting]       = useState(false);
-  
+
   const [transactions, setTransactions] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
@@ -64,7 +66,7 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     loadTransactions();
-    
+
     Promise.all([
       fetchApi('/clients'),
       fetchApi('/boxes'),
@@ -207,36 +209,35 @@ export default function ExpensesPage() {
 
   if (!isFormOpen) {
     return (
-      <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto pb-8">
-        <header className="mb-6 flex justify-between items-end">
+      <div className="mx-auto w-full max-w-[1400px] animate-in fade-in duration-500 pb-8">
+        <header className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#f8fafc] mb-2 tracking-tight">Egresos de Caja</h1>
-            <p className="text-[#94a3b8]">Gastos operativos, sueldos, retiros y pagos de obligaciones.</p>
+            <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Egresos de Caja</h1>
+            <p className="mt-1 text-[13.5px] text-muted">Gastos operativos, sueldos, retiros y pagos de obligaciones.</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { setFormMode('expense'); setIsFormOpen(true); }} className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:-translate-y-0.5">
+            <button onClick={() => { setFormMode('expense'); setIsFormOpen(true); }} className="rounded-[9px] bg-negative px-5 py-3 font-bold text-white shadow-sm transition-all hover:opacity-90">
               - Nuevo Egreso
             </button>
-            <button onClick={() => { setFormMode('check-return'); setIsFormOpen(true); }} className="px-5 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-600/20 hover:-translate-y-0.5">
+            <button onClick={() => { setFormMode('check-return'); setIsFormOpen(true); }} className="rounded-[9px] bg-warn px-5 py-3 font-bold text-white shadow-sm transition-all hover:opacity-90">
               ✕ Rechazar Cheque
             </button>
           </div>
         </header>
 
         {/* FILTER BAR */}
-        <div className="glass-panel rounded-2xl border border-[#334155]/50 p-5 mb-4 space-y-3">
+        <Card className="mb-4 space-y-3 p-5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#64748b]">Filtros</p>
-            {hasEFilter && <button onClick={() => { setESearch(''); setECategory(''); setEClient(''); setECurrency(''); setEDateFrom(''); setEDateTo(''); }} className="text-xs text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">✕ Limpiar</button>}
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Filtros</p>
+            {hasEFilter && <button onClick={() => { setESearch(''); setECategory(''); setEClient(''); setECurrency(''); setEDateFrom(''); setEDateTo(''); }} className="text-xs font-medium text-accent transition-colors hover:underline">✕ Limpiar</button>}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-faint">🔍</span>
               <input type="text" value={eSearch} onChange={e => setESearch(e.target.value)} placeholder="Buscar descripción..."
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-red-400 placeholder:text-[#334155]" />
+                className={`${inputClass} pl-9`} />
             </div>
-            <select value={eCategory} onChange={e => setECategory(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-red-400">
+            <select value={eCategory} onChange={e => setECategory(e.target.value)} className={selectClass}>
               <option value="">Todas las categorías</option>
               <option value="OPERATING_EXPENSE">Gasto Operativo / Fijo</option>
               <option value="SALARY">Sueldos y Honorarios</option>
@@ -245,350 +246,352 @@ export default function ExpensesPage() {
               <option value="PARTNER_WITHDRAWAL">Retiro de Socios</option>
               <option value="OTHER">Otro</option>
             </select>
-            <select value={eClient} onChange={e => setEClient(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-red-400">
+            <select value={eClient} onChange={e => setEClient(e.target.value)} className={selectClass}>
               <option value="">Todos los clientes/prov.</option>
               {clients.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <select value={eCurrency} onChange={e => setECurrency(e.target.value)}
-              className="bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-2.5 text-sm text-[#d1dded] focus:outline-none focus:border-red-400">
+            <select value={eCurrency} onChange={e => setECurrency(e.target.value)} className={selectClass}>
               <option value="">Toda moneda</option>
               <option value="ARS">ARS — Pesos</option>
               <option value="USD">USD — Dólares</option>
             </select>
             <div>
-              <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Desde</label>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Desde</label>
               <input type="date" value={eDateFrom} onChange={e => setEDateFrom(e.target.value)}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-3 py-2 text-xs text-[#d1dded] focus:outline-none focus:border-red-400" />
+                className={`${inputClass} py-2 text-xs`} />
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1 tracking-wider">Hasta</label>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted">Hasta</label>
               <input type="date" value={eDateTo} onChange={e => setEDateTo(e.target.value)}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-3 py-2 text-xs text-[#d1dded] focus:outline-none focus:border-red-400" />
+                className={`${inputClass} py-2 text-xs`} />
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="flex justify-between items-center mb-3 px-1">
-          <p className="text-sm text-[#64748b]"><span className="text-[#d1dded] font-bold">{expFiltered.length}</span> resultado{expFiltered.length !== 1 ? 's' : ''}{hasEFilter && <span className="text-red-400 ml-1">(filtrado)</span>}</p>
+        <div className="mb-3 flex items-center justify-between px-1">
+          <p className="text-sm text-muted"><span className="font-bold text-ink">{expFiltered.length}</span> resultado{expFiltered.length !== 1 ? 's' : ''}{hasEFilter && <span className="ml-1 text-negative">(filtrado)</span>}</p>
           {expFiltered.length > 0 && (
             <div className="flex items-center gap-4">
-              {expTotalARS > 0 && <p className="text-sm text-[#64748b]">ARS: <span className="text-red-400 font-bold font-mono">-$ {expTotalARS.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span></p>}
-              {expTotalUSD > 0 && <p className="text-sm text-[#64748b]">USD: <span className="text-red-400 font-bold font-mono">-U$S {expTotalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span></p>}
+              {expTotalARS > 0 && <p className="text-sm text-muted">ARS: <span className="font-mono font-bold text-negative">-$ {expTotalARS.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span></p>}
+              {expTotalUSD > 0 && <p className="text-sm text-muted">USD: <span className="font-mono font-bold text-negative">-U$S {expTotalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span></p>}
             </div>
           )}
         </div>
 
-        <div className="glass-panel rounded-2xl overflow-x-auto border border-[#334155]/50 shadow-xl">
-          <table className="w-full text-left border-collapse">
+        <Card className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[#334155]/50 bg-[#0a1324]/50 text-[#94a3b8] text-xs uppercase tracking-wider">
+              <tr className="border-b border-line bg-track text-xs uppercase tracking-wider text-muted">
                 <th className="p-4 font-semibold">Fecha</th>
                 <th className="p-4 font-semibold">Categoría</th>
                 <th className="p-4 font-semibold">Cliente Adjunto</th>
                 <th className="p-4 font-semibold">Descripción</th>
-                <th className="p-4 font-semibold text-right">Importe</th>
-                <th className="p-4 font-semibold w-24"></th>
+                <th className="p-4 text-right font-semibold">Importe</th>
+                <th className="w-24 p-4 font-semibold"></th>
               </tr>
             </thead>
             <tbody>
               {expFiltered.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-[#64748b]">{hasEFilter ? '⚠ Sin resultados.' : 'No hay egresos registrados.'}</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-faint">{hasEFilter ? '⚠ Sin resultados.' : 'No hay egresos registrados.'}</td></tr>
               ) : expFiltered.slice(0, expVisible).map((t: any, idx: number) => {
                 const mov = t.movements?.[0];
                 return (
-                  <tr key={t.id} className={`border-b border-[#334155]/30 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-[#0a1324]/30'}`}>
-                    <td className="p-4 text-[#d1dded] whitespace-nowrap">{new Date(t.operation_date).toLocaleDateString()}</td>
-                    <td className="p-4"><span className="px-2 py-1 bg-black/30 rounded text-xs font-medium text-[#94a3b8] border border-[#334155]/50">{t.category}</span></td>
-                    <td className="p-4 text-[#d1dded]">{mov?.client?.name || '-'}</td>
+                  <tr key={t.id} className={`border-b border-line transition-colors hover:bg-row-hover ${idx % 2 === 0 ? 'bg-transparent' : 'bg-canvas'}`}>
+                    <td className="whitespace-nowrap p-4 text-ink">{new Date(t.operation_date).toLocaleDateString()}</td>
+                    <td className="p-4"><span className="whitespace-nowrap rounded border border-line bg-track px-2 py-1 text-xs font-medium text-muted">{t.category}</span></td>
+                    <td className="p-4 text-ink">{mov?.client?.name || '-'}</td>
                     <td className="p-4">
-                      <p className={t.is_reversed ? 'text-[#677383] line-through' : 'text-[#d1dded]'}>{t.description}</p>
-                      {t.reversal_of && <span className="mt-1 inline-block text-[10px] text-[#7e8b9d] bg-[#2c394a] px-1.5 py-0.5 rounded border border-[#4d596b] font-bold uppercase tracking-wider">Reversión</span>}
+                      <p className={t.is_reversed ? 'text-faint line-through' : 'text-ink'}>{t.description}</p>
+                      {t.reversal_of && <span className="mt-1 inline-block rounded border border-line bg-track px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">Reversión</span>}
                     </td>
-                    <td className="p-4 font-bold font-mono text-right text-red-400">-{mov?.currency === 'USD' ? 'U$S ' : '$ '}{Number(mov?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td className="whitespace-nowrap p-4 text-right font-mono font-bold text-negative">-{mov?.currency === 'USD' ? 'U$S ' : '$ '}{Number(mov?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                     <td className="p-4 text-right">
                       {!t.is_reversed && !t.reversal_of && (
-                        <button onClick={() => setRevertTarget(t)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-medium">
+                        <button onClick={() => setRevertTarget(t)} className="rounded-lg border border-negative/30 px-3 py-1.5 text-xs font-medium text-negative transition-colors hover:bg-negative-bg">
                           Revertir
                         </button>
                       )}
-                      {t.is_reversed && <span className="text-[10px] text-red-400/70 font-bold uppercase tracking-wider">Revertida</span>}
+                      {t.is_reversed && <span className="text-[10px] font-bold uppercase tracking-wider text-negative/70">Revertida</span>}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
-          </table>          {expVisible < expFiltered.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setExpVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+          </table>
+          {expVisible < expFiltered.length && (
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setExpVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({expFiltered.length - expVisible} restantes)
               </button>
             </div>
-          )}        </div>
+          )}
+        </Card>
         {revertTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050B14]/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="glass-panel shadow-[0_0_50px_rgba(0,0,0,0.6)] border-t border-t-white/10 rounded-3xl w-full max-w-lg">
-              <div className="p-6 border-b border-[#334155]/50 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-[#f8fafc] tracking-tight">Revertir Transacción</h2>
-                <button onClick={() => setRevertTarget(null)} className="text-[#64748b] hover:text-white font-bold text-xl transition-colors">×</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-300">
+            <div className="w-full max-w-lg rounded-[14px] border border-line bg-surface shadow-2xl">
+              <div className="flex items-center justify-between border-b border-line p-6">
+                <h2 className="text-xl font-semibold tracking-tight text-ink">Revertir Transacción</h2>
+                <button onClick={() => setRevertTarget(null)} className="text-xl font-bold text-faint transition-colors hover:text-ink">×</button>
               </div>
-              <div className="p-6 space-y-4">
-                <p className="text-[#94a3b8] text-sm leading-relaxed">Esta acción creará asientos de contrapartida que <strong className="text-[#d1dded]">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="text-red-400 font-semibold">REVERTIDA</span>.</p>
-                <div className="bg-[#081329] border border-[#2c394a] rounded-xl px-4 py-3">
-                  <p className="text-xs text-[#64748b] uppercase tracking-wider mb-1">Operación a revertir</p>
-                  <p className="text-[#d1dded] font-medium">{revertTarget.description}</p>
-                  <p className="text-[#7e8b9d] text-xs mt-1">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
+              <div className="space-y-4 p-6">
+                <p className="text-sm leading-relaxed text-muted">Esta acción creará asientos de contrapartida que <strong className="text-ink">anulan todos los efectos contables</strong> de la operación original. La transacción quedará marcada como <span className="font-semibold text-negative">REVERTIDA</span>.</p>
+                <div className="rounded-xl border border-line bg-canvas px-4 py-3">
+                  <p className="mb-1 text-xs uppercase tracking-wider text-faint">Operación a revertir</p>
+                  <p className="font-medium text-ink">{revertTarget.description}</p>
+                  <p className="mt-1 text-xs text-faint">{new Date(revertTarget.operation_date).toLocaleDateString()} · ID: {revertTarget.id.split('-')[0]}..</p>
                 </div>
-                <p className="text-yellow-400/80 text-xs">⚠ Esta acción no puede deshacerse.</p>
+                <p className="text-xs text-warn">⚠ Esta acción no puede deshacerse.</p>
               </div>
-              <div className="p-6 border-t border-[#334155]/50 flex justify-end gap-3">
-                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 text-[#aab6c7] hover:text-white font-medium transition-colors">Cancelar</button>
-                <button onClick={handleRevert} disabled={reverting} className="bg-red-600/80 hover:bg-red-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg">
+              <div className="flex justify-end gap-3 border-t border-line p-6">
+                <button onClick={() => setRevertTarget(null)} disabled={reverting} className="px-5 py-2.5 font-medium text-muted transition-colors hover:text-ink">Cancelar</button>
+                <button onClick={handleRevert} disabled={reverting} className="rounded-lg bg-negative px-6 py-2.5 font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50">
                   {reverting ? 'Revirtiendo...' : 'Confirmar Reversión'}
                 </button>
               </div>
             </div>
           </div>
-        )}      </div>
+        )}
+      </div>
     );
   }
 
   // ── Check return form view ────────────────────────────────────────────
   if (isFormOpen && formMode === 'check-return') {
     return (
-      <div className="w-full h-full animate-in slide-in-from-bottom-8 duration-500 max-w-3xl mx-auto">
+      <div className="mx-auto w-full max-w-4xl animate-in slide-in-from-bottom-8 duration-500">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-[#f8fafc] mb-2 tracking-tight">Rechazar Cheque</h1>
-          <p className="text-[#94a3b8]">Devuelve un cheque entregado a un cliente y lo marca como rechazado.</p>
+          <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Rechazar Cheque</h1>
+          <p className="mt-1 text-[13.5px] text-muted">Devuelve un cheque entregado a un cliente y lo marca como rechazado.</p>
         </header>
 
-        <form onSubmit={handleCheckReturnSubmit} className="glass-panel p-8 rounded-2xl shadow-xl border-t border-t-white/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-amber-500/10 pointer-events-none"></div>
-
-          <div className="grid grid-cols-1 gap-6 relative z-10">
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Cliente que tiene el cheque</label>
-              <select
-                required
-                value={returnForm.ownerClientId}
-                onChange={e => setReturnForm({ ...returnForm, ownerClientId: e.target.value, checkId: '' })}
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-500"
-              >
-                <option value="">Seleccionar cliente...</option>
-                {clients.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-
-            {returnForm.ownerClientId && (
+        <form onSubmit={handleCheckReturnSubmit}>
+          <Card className="p-8">
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="block text-sm text-[#aab6c7] mb-2 font-medium">
-                  Cheque a rechazar
-                  {clientChecks.length === 0 && <span className="ml-2 text-amber-400 text-xs">(Sin cheques entregados a este cliente)</span>}
-                </label>
+                <label className="mb-2 block text-sm font-medium text-muted">Cliente que tiene el cheque</label>
                 <select
                   required
-                  value={returnForm.checkId}
-                  onChange={e => setReturnForm({ ...returnForm, checkId: e.target.value })}
-                  className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-500"
+                  value={returnForm.ownerClientId}
+                  onChange={e => setReturnForm({ ...returnForm, ownerClientId: e.target.value, checkId: '' })}
+                  className={selectClass}
                 >
-                  <option value="">Seleccionar cheque...</option>
-                  {clientChecks.map((c: any) => (
-                    <option key={c.id} value={c.id}>
-                      {c.bank_name} — N° {c.check_number} — $ {Number(c.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })} — Vto: {new Date(c.due_date).toLocaleDateString()}
-                    </option>
-                  ))}
+                  <option value="">Seleccionar cliente...</option>
+                  {clients.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-            )}
 
-            {selectedCheck && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-[#d1dded]">
-                <p className="font-bold text-amber-300 mb-1">Cheque seleccionado</p>
-                <p>{selectedCheck.bank_name} · N° {selectedCheck.check_number} · <strong>$ {Number(selectedCheck.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong></p>
-                <p className="text-[#94a3b8] text-xs mt-1">Este cheque volverá a la agencia marcado como RECHAZADO.</p>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm text-[#aab6c7] mb-2 font-medium">
-                Comisión por rechazo
-                <span className="ml-1 text-[#64748b] text-xs">— porcentaje sobre el importe del cheque</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <NumericFormat
-                    value={returnForm.rejectionFeePercentage}
-                    onValueChange={v => setReturnForm({ ...returnForm, rejectionFeePercentage: v.value })}
-                    decimalSeparator="." decimalScale={4} suffix="%"
-                    className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-500"
-                    placeholder="Ej: 2"
-                    disabled={!selectedCheck}
-                  />
-                  {!selectedCheck && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#475569]">Seleccioná un cheque primero</span>
-                  )}
+              {returnForm.ownerClientId && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-muted">
+                    Cheque a rechazar
+                    {clientChecks.length === 0 && <span className="ml-2 text-xs text-warn">(Sin cheques entregados a este cliente)</span>}
+                  </label>
+                  <select
+                    required
+                    value={returnForm.checkId}
+                    onChange={e => setReturnForm({ ...returnForm, checkId: e.target.value })}
+                    className={selectClass}
+                  >
+                    <option value="">Seleccionar cheque...</option>
+                    {clientChecks.map((c: any) => (
+                      <option key={c.id} value={c.id}>
+                        {c.bank_name} — N° {c.check_number} — $ {Number(c.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })} — Vto: {new Date(c.due_date).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                {selectedCheck && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-right min-w-[160px]">
-                    <p className="text-[10px] text-amber-400/70 uppercase font-bold tracking-wider mb-0.5">Comisión calculada</p>
-                    <p className="text-amber-300 font-bold font-mono text-lg">
-                      $ {rejectionFeeAmount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </p>
-                    {Number(returnForm.rejectionFeePercentage) > 0 && (
-                      <p className="text-[10px] text-[#64748b] mt-0.5">
-                        $ {Number(selectedCheck.amount).toLocaleString('es-AR')} × {returnForm.rejectionFeePercentage}%
-                      </p>
+              )}
+
+              {selectedCheck && (
+                <div className="rounded-xl border border-warn/30 bg-warn-bg p-4 text-sm text-ink">
+                  <p className="mb-1 font-bold text-warn">Cheque seleccionado</p>
+                  <p>{selectedCheck.bank_name} · N° {selectedCheck.check_number} · <strong>$ {Number(selectedCheck.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong></p>
+                  <p className="mt-1 text-xs text-muted">Este cheque volverá a la agencia marcado como RECHAZADO.</p>
+                </div>
+              )}
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-muted">
+                  Comisión por rechazo
+                  <span className="ml-1 text-xs text-faint">— porcentaje sobre el importe del cheque</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <NumericFormat
+                      value={returnForm.rejectionFeePercentage}
+                      onValueChange={v => setReturnForm({ ...returnForm, rejectionFeePercentage: v.value })}
+                      decimalSeparator="." decimalScale={4} suffix="%"
+                      className={inputClass}
+                      placeholder="Ej: 2"
+                      disabled={!selectedCheck}
+                    />
+                    {!selectedCheck && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-faint">Seleccioná un cheque primero</span>
                     )}
                   </div>
-                )}
+                  {selectedCheck && (
+                    <div className="min-w-[160px] rounded-lg border border-warn/30 bg-warn-bg px-4 py-3 text-right">
+                      <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-warn/70">Comisión calculada</p>
+                      <p className="font-mono text-lg font-bold text-warn">
+                        $ {rejectionFeeAmount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </p>
+                      {Number(returnForm.rejectionFeePercentage) > 0 && (
+                        <p className="mt-0.5 text-[10px] text-faint">
+                          $ {Number(selectedCheck.amount).toLocaleString('es-AR')} × {returnForm.rejectionFeePercentage}%
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {rejectionFeeAmount > 0 && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-muted">Descripción del cargo de rechazo</label>
+                  <input
+                    type="text"
+                    value={returnForm.rejectionFeeDescription}
+                    onChange={e => setReturnForm({ ...returnForm, rejectionFeeDescription: e.target.value })}
+                    placeholder="Ej: Comisión x rechazo de cheque"
+                    className={inputClass}
+                  />
+                </div>
+              )}
             </div>
 
-            {rejectionFeeAmount > 0 && (
-              <div>
-                <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Descripción del cargo de rechazo</label>
-                <input
-                  type="text"
-                  value={returnForm.rejectionFeeDescription}
-                  onChange={e => setReturnForm({ ...returnForm, rejectionFeeDescription: e.target.value })}
-                  placeholder="Ej: Comisión x rechazo de cheque"
-                  className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-amber-500"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-[#334155]/50 flex justify-end space-x-4">
-            <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 text-[#aab6c7] hover:text-white transition-colors font-medium">Volver</button>
-            <button
-              type="submit"
-              disabled={loading || !returnForm.checkId}
-              className={`px-8 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${loading || !returnForm.checkId ? 'opacity-50 cursor-not-allowed bg-gray-500' : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:scale-105 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]'}`}
-            >
-              {loading ? 'Procesando...' : 'Confirmar Rechazo'}
-            </button>
-          </div>
+            <div className="mt-8 flex justify-end space-x-4 border-t border-line pt-6">
+              <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 font-medium text-muted transition-colors hover:text-ink">Volver</button>
+              <button
+                type="submit"
+                disabled={loading || !returnForm.checkId}
+                className={`rounded-xl px-8 py-3 font-bold text-white shadow-sm transition-all duration-300 ${loading || !returnForm.checkId ? 'cursor-not-allowed bg-faint opacity-60' : 'bg-warn hover:opacity-90'}`}
+              >
+                {loading ? 'Procesando...' : 'Confirmar Rechazo'}
+              </button>
+            </div>
+          </Card>
         </form>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full animate-in slide-in-from-bottom-8 duration-500 max-w-3xl mx-auto">
+    <div className="mx-auto w-full max-w-4xl animate-in slide-in-from-bottom-8 duration-500">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-[#f8fafc] mb-2 tracking-tight">Cargar Egreso (Ticket)</h1>
-        <p className="text-[#94a3b8]">Extrae liquidez física de una de las cajas operativas.</p>
+        <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Cargar Egreso (Ticket)</h1>
+        <p className="mt-1 text-[13.5px] text-muted">Extrae liquidez física de una de las cajas operativas.</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="glass-panel p-8 rounded-2xl shadow-xl border-t border-t-white/10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-red-500/10 pointer-events-none"></div>
+      <form onSubmit={handleSubmit}>
+        <Card className="p-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-muted">Proveedor / Cliente (Opcional)</label>
+              <select
+                value={form.clientId}
+                onChange={e => setForm(prev => ({...prev, clientId: e.target.value}))}
+                className={selectClass}
+              >
+                <option value="">Egreso Libre (Ej: Gasto operativo)</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-          <div>
-            <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Proveedor / Cliente (Opcional)</label>
-            <select 
-              value={form.clientId} 
-              onChange={e => setForm(prev => ({...prev, clientId: e.target.value}))} 
-              className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500"
-            >
-              <option value="">Egreso Libre (Ej: Gasto operativo)</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <div>
+               <label className="mb-2 block text-sm font-medium text-muted">Caja Pagadora</label>
+               <select
+                  required disabled
+                  value={form.agencyBoxId}
+                  className={`${selectClass} cursor-not-allowed opacity-60`}
+               >
+                  <option value="">{boxes.length > 0 ? "Autocompletado..." : "Cree Caja Principal"}</option>
+                  {boxes.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+               </select>
+            </div>
+
+            <div>
+               <label className="mb-2 block text-sm font-medium text-muted">Moneda</label>
+               <select
+                 value={form.currency}
+                 onChange={e => setForm(prev => ({...prev, currency: e.target.value}))}
+                 className={`${selectClass} font-bold`}
+               >
+                 <option value="ARS">Pesos Argentinos (ARS)</option>
+                 <option value="USD">Dólares (USD)</option>
+               </select>
+            </div>
+
+            <div>
+               <label className="mb-2 block text-sm font-medium text-muted">Categoría del Gasto</label>
+               <select
+                 value={form.category}
+                 onChange={e => setForm(prev => ({...prev, category: e.target.value}))}
+                 className={selectClass}
+               >
+                 <option value="OPERATING_EXPENSE">Gasto Operativo / Fijo</option>
+                 <option value="SALARY">Sueldos y Honorarios</option>
+                 <option value="COMMISSION">Comisiones</option>
+                 <option value="CLIENT_FUNDING">Pago a Cliente (Cancelación de Deuda)</option>
+                 <option value="PARTNER_WITHDRAWAL">Retiro de Socios</option>
+                 <option value="OTHER">Otro Egreso</option>
+               </select>
+            </div>
+
+            <div className="col-span-1 mt-2 rounded-2xl border border-line bg-canvas p-6 md:col-span-2">
+               <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-negative">Monto Extraído</label>
+               <NumericFormat
+                   value={form.amount}
+                   onValueChange={(values) => setForm(prev => ({...prev, amount: values.value}))}
+                   thousandSeparator=","
+                   decimalSeparator="."
+                   prefix={form.currency === 'USD' ? 'U$S ' : '$ '}
+                   className="w-full border-b-2 bg-transparent py-2 text-4xl font-bold text-ink transition-colors focus:outline-none"
+                   style={{ borderBottomColor: '#b42318' } as any}
+                   placeholder="0.00"
+               />
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
+               <label className="mb-2 block text-sm font-medium text-muted">Descripción y Motivo</label>
+               <input
+                 type="text" required
+                 value={form.description}
+                 onChange={e => setForm(prev => ({...prev, description: e.target.value}))}
+                 placeholder="Ej: Pago de alquiler del mes, sucursal norte."
+                 className={inputClass}
+               />
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
+               <label className="mb-2 block text-sm font-medium text-muted">
+                 Fecha de operación
+                 {operationDate !== todayStr && (
+                   <span className="ml-2 text-xs font-normal text-warn">← fecha retroactiva</span>
+                 )}
+               </label>
+               <input
+                 type="date"
+                 value={operationDate}
+                 max={todayStr}
+                 onChange={e => setOperationDate(e.target.value)}
+                 className={inputClass}
+               />
+            </div>
           </div>
 
-          <div>
-             <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Caja Pagadora</label>
-             <select 
-                required disabled
-                value={form.agencyBoxId} 
-                className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500 opacity-70 cursor-not-allowed"
+          <div className="mt-8 flex justify-end space-x-4 border-t border-line pt-6">
+             <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 font-medium text-muted transition-colors hover:text-ink">Volver</button>
+             <button
+               type="submit"
+               disabled={loading}
+               className={`rounded-xl px-8 py-3 font-bold text-white shadow-sm transition-all duration-300 ${loading ? 'cursor-not-allowed bg-faint opacity-60' : 'bg-negative hover:opacity-90'}`}
              >
-                <option value="">{boxes.length > 0 ? "Autocompletado..." : "Cree Caja Principal"}</option>
-                {boxes.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-             </select>
+               {loading ? 'Impactando en Caja...' : 'Confirmar Egreso'}
+             </button>
           </div>
-
-          <div>
-             <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Moneda</label>
-             <select 
-               value={form.currency} 
-               onChange={e => setForm(prev => ({...prev, currency: e.target.value}))} 
-               className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500 font-bold"
-             >
-               <option value="ARS">Pesos Argentinos (ARS)</option>
-               <option value="USD">Dólares (USD)</option>
-             </select>
-          </div>
-
-          <div>
-             <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Categoría del Gasto</label>
-             <select 
-               value={form.category} 
-               onChange={e => setForm(prev => ({...prev, category: e.target.value}))} 
-               className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500"
-             >
-               <option value="OPERATING_EXPENSE">Gasto Operativo / Fijo</option>
-               <option value="SALARY">Sueldos y Honorarios</option>
-               <option value="COMMISSION">Comisiones</option>
-               <option value="CLIENT_FUNDING">Pago a Cliente (Cancelación de Deuda)</option>
-               <option value="PARTNER_WITHDRAWAL">Retiro de Socios</option>
-               <option value="OTHER">Otro Egreso</option>
-             </select>
-          </div>
-
-          <div className="col-span-1 md:col-span-2 bg-[#141f32]/50 border border-[#2c394a] rounded-2xl p-6 mt-2">
-             <label className="block text-xs uppercase font-bold text-red-400 mb-3 tracking-wider">Monto Extraído</label>
-             <NumericFormat 
-                 value={form.amount}
-                 onValueChange={(values) => setForm(prev => ({...prev, amount: values.value}))}
-                 thousandSeparator=","
-                 decimalSeparator="."
-                 prefix={form.currency === 'USD' ? 'U$S ' : '$ '}
-                 className="w-full bg-transparent border-b-2 border-[#334155] focus:border-red-400 text-4xl text-[#f8fafc] font-bold py-2 focus:outline-none transition-colors"
-                 placeholder="0.00"
-             />
-          </div>
-
-          <div className="col-span-1 md:col-span-2">
-             <label className="block text-sm text-[#aab6c7] mb-2 font-medium">Descripción y Motivo</label>
-             <input 
-               type="text" required
-               value={form.description} 
-               onChange={e => setForm(prev => ({...prev, description: e.target.value}))} 
-               placeholder="Ej: Pago de alquiler del mes, sucursal norte." 
-               className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500" 
-             />
-          </div>
-
-          <div className="col-span-1 md:col-span-2">
-             <label className="block text-sm text-[#aab6c7] mb-2 font-medium">
-               Fecha de operación
-               {operationDate !== todayStr && (
-                 <span className="ml-2 text-xs text-amber-400 font-normal">← fecha retroactiva</span>
-               )}
-             </label>
-             <input
-               type="date"
-               value={operationDate}
-               max={todayStr}
-               onChange={e => setOperationDate(e.target.value)}
-               className="w-full bg-[#081329] border border-[#2c394a] rounded-lg px-4 py-3 text-[#d1dded] focus:outline-none focus:border-red-500"
-             />
-          </div>
-        </div>
-        
-        <div className="mt-8 pt-6 border-t border-[#334155]/50 flex justify-end space-x-4">
-           <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 text-[#aab6c7] hover:text-white transition-colors font-medium">Volver</button>
-           <button 
-             type="submit" 
-             disabled={loading}
-             className={`px-8 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${loading ? 'opacity-50 cursor-not-allowed bg-gray-500' : 'bg-gradient-to-r from-red-500 to-red-600 hover:scale-105 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]'}`}
-           >
-             {loading ? 'Impactando en Caja...' : 'Confirmar Egreso'}
-           </button>
-        </div>
+        </Card>
       </form>
 
       {overdraftData && (

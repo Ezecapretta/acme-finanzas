@@ -1,7 +1,8 @@
 'use client';
-// ─── REWRITTEN — 3-tab layout: Balance Sheet | Income Statement | Ledger ───
+// ─── 3-tab layout: Balance Sheet | Income Statement | Ledger ───
 import { useState, useEffect, useMemo } from 'react';
 import { fetchApi } from '@/services/api';
+import { Card } from '@/components/ui/Card';
 
 type Tab = 'balance-sheet' | 'income-statement';
 
@@ -78,24 +79,24 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="w-full animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto pb-12">
+    <div className="mx-auto w-full max-w-6xl animate-in fade-in duration-500 pb-12">
 
       {/* Header */}
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-[#f8fafc] mb-1 tracking-tight">Reportes Contables</h1>
-        <p className="text-[#94a3b8]">Estados financieros y libro mayor histórico.</p>
+        <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Reportes Contables</h1>
+        <p className="mt-1 text-[13.5px] text-muted">Estados financieros y libro mayor histórico.</p>
       </header>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 mb-8 glass-panel p-1.5 rounded-2xl border border-[#334155]/50 w-fit">
+      <div className="mb-8 flex w-fit flex-wrap gap-1 rounded-2xl border border-line bg-surface p-1.5">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-[#0ea5e9] text-white shadow-lg shadow-[#0ea5e9]/20'
-                : 'text-[#64748b] hover:text-[#d1dded] hover:bg-white/5'
+                ? 'bg-ink text-white shadow-sm'
+                : 'text-muted hover:bg-track hover:text-ink'
             }`}
           >
             <span>{tab.icon}</span>
@@ -109,20 +110,20 @@ export default function ReportsPage() {
           ════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'balance-sheet' && (
         <div className="animate-in fade-in duration-300">
-          <div className="flex justify-between items-center mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-[#f8fafc]">Estado de Situación Financiera</h2>
-              <p className="text-sm text-[#64748b] mt-0.5">Activos, Pasivos y Patrimonio Neto al día de hoy.</p>
+              <h2 className="text-xl font-bold text-ink">Estado de Situación Financiera</h2>
+              <p className="mt-0.5 text-sm text-faint">Activos, Pasivos y Patrimonio Neto al día de hoy.</p>
             </div>
             <button onClick={loadBalanceSheet} disabled={bsLoading}
-              className="px-4 py-2 text-xs bg-[#0ea5e9]/10 border border-[#0ea5e9]/30 rounded-lg text-[#0ea5e9] hover:bg-[#0ea5e9]/20 transition font-semibold disabled:opacity-50">
+              className="rounded-lg border border-accent/30 bg-accent-bg px-4 py-2 text-xs font-semibold text-accent transition hover:opacity-80 disabled:opacity-50">
               {bsLoading ? '…' : '↺ Actualizar'}
             </button>
           </div>
           {bsLoading ? (
-            <div className="flex items-center justify-center py-20"><div className="w-8 h-8 rounded-full border-2 border-[#0ea5e9] border-t-transparent animate-spin" /></div>
+            <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
           ) : !bsData ? (
-            <div className="glass-panel rounded-2xl p-10 text-center text-[#64748b] border border-[#334155]/50">No hay datos disponibles.</div>
+            <Card className="p-10 text-center text-faint">No hay datos disponibles.</Card>
           ) : (() => {
             const totals = bsData.totals || {};
             const agency = Array.isArray(bsData.agencyBoxes) ? bsData.agencyBoxes : [];
@@ -145,255 +146,251 @@ export default function ReportsPage() {
             const fxPos      = bsData.fxPosition || { comprasUSD: 0, ventasUSD: 0, comprasARS: 0, ventasARS: 0, netUSD: 0, totalOps: 0 };
             const aportes    = bsData.capitalContributions || { ARS: 0, USD: 0 };
             return (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* ACTIVO */}
                 <div className="space-y-4">
-                  <div className="glass-panel rounded-2xl border border-[#0ea5e9]/30 bg-[#0ea5e9]/5 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-[#0ea5e9]/20">
-                      <h3 className="text-base font-bold text-[#0ea5e9] uppercase tracking-wider">Activo</h3>
-                      <p className="text-xs text-[#64748b] mt-0.5">Todo lo que la empresa tiene y controla</p>
+                  <Card className="overflow-hidden">
+                    <div className="border-b border-line bg-accent-bg px-6 py-4">
+                      <h3 className="text-base font-bold uppercase tracking-wider text-accent">Activo</h3>
+                      <p className="mt-0.5 text-xs text-faint">Todo lo que la empresa tiene y controla</p>
                     </div>
                     <div className="px-6 py-4">
-                      <p className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-3">Activo Corriente</p>
+                      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-faint">Activo Corriente</p>
                       <div className="mb-4">
-                        <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                          <span className="text-sm text-[#d1dded] font-medium">Caja / Bancos</span>
+                        <div className="flex items-center justify-between border-b border-line py-2">
+                          <span className="text-sm font-medium text-ink">Caja / Bancos</span>
                           <div className="text-right">
-                            <p className="text-sm font-bold font-mono text-[#0ea5e9]">{fmtARS(cashARS)}</p>
-                            {cashUSD !== 0 && <p className="text-xs font-mono text-sky-400">{fmtUSD(cashUSD)}</p>}
+                            <p className="font-mono text-sm font-bold text-accent">{fmtARS(cashARS)}</p>
+                            {cashUSD !== 0 && <p className="font-mono text-xs text-ink">{fmtUSD(cashUSD)}</p>}
                           </div>
                         </div>
                         {agency.length > 0 && (
-                          <div className="pl-4 mt-1 space-y-1">
+                          <div className="mt-1 space-y-1 pl-4">
                             {agency.map((b: any) => (
-                              <div key={b.id} className="flex justify-between text-xs text-[#64748b]">
+                              <div key={b.id} className="flex justify-between text-xs text-faint">
                                 <span>{b.name}</span>
-                                <span className="font-mono">{fmtARS(b.balances?.ARS || 0)}{(b.balances?.USD || 0) !== 0 && <span className="text-sky-400 ml-2">{fmtUSD(b.balances.USD)}</span>}</span>
+                                <span className="font-mono">{fmtARS(b.balances?.ARS || 0)}{(b.balances?.USD || 0) !== 0 && <span className="ml-2 text-ink">{fmtUSD(b.balances.USD)}</span>}</span>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                       <div className="mb-4">
-                        <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                          <span className="text-sm text-[#d1dded] font-medium">Cuentas por Cobrar</span>
-                          <span className="text-sm font-bold font-mono text-emerald-400">{fmtARS(totalAR)}</span>
+                        <div className="flex items-center justify-between border-b border-line py-2">
+                          <span className="text-sm font-medium text-ink">Cuentas por Cobrar</span>
+                          <span className="font-mono text-sm font-bold text-positive">{fmtARS(totalAR)}</span>
                         </div>
                         {ar.length > 0 ? (
-                          <div className="pl-4 mt-1 space-y-1">
+                          <div className="mt-1 space-y-1 pl-4">
                             {ar.map((p: any) => (
-                              <div key={p.clientId} className="flex justify-between text-xs text-[#64748b]">
+                              <div key={p.clientId} className="flex justify-between text-xs text-faint">
                                 <span>{p.clientName}</span>
                                 <div className="text-right">
-                                  {p.netARS > 0 && <span className="font-mono text-emerald-500">{fmtARS(p.netARS)}</span>}
-                                  {p.netUSD > 0 && <span className="font-mono text-sky-400 ml-2">{fmtUSD(p.netUSD)}</span>}
+                                  {p.netARS > 0 && <span className="font-mono text-positive">{fmtARS(p.netARS)}</span>}
+                                  {p.netUSD > 0 && <span className="ml-2 font-mono text-ink">{fmtUSD(p.netUSD)}</span>}
                                 </div>
                               </div>
                             ))}
                           </div>
-                        ) : <p className="pl-4 mt-1 text-xs text-[#475569] italic">Sin cuentas por cobrar abiertas</p>}
+                        ) : <p className="mt-1 pl-4 text-xs italic text-faint">Sin cuentas por cobrar abiertas</p>}
                       </div>
                       <div>
-                        <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                          <span className="text-sm text-[#d1dded] font-medium">Cheques en Cartera</span>
+                        <div className="flex items-center justify-between border-b border-line py-2">
+                          <span className="text-sm font-medium text-ink">Cheques en Cartera</span>
                           <div className="text-right">
-                            <p className="text-sm font-bold font-mono text-violet-400">{fmtARS(checksARS)}</p>
-                            {checksUSD > 0 && <p className="text-xs font-mono text-violet-300">{fmtUSD(checksUSD)}</p>}
+                            <p className="font-mono text-sm font-bold text-accent">{fmtARS(checksARS)}</p>
+                            {checksUSD > 0 && <p className="font-mono text-xs text-accent">{fmtUSD(checksUSD)}</p>}
                           </div>
                         </div>
-                        <p className="pl-4 mt-1 text-xs text-[#475569]">{checks.filter((c: any) => c.currency === 'ARS').length} cheque(s) ARS · {checks.filter((c: any) => c.currency === 'USD').length} cheque(s) USD</p>
+                        <p className="mt-1 pl-4 text-xs text-faint">{checks.filter((c: any) => c.currency === 'ARS').length} cheque(s) ARS · {checks.filter((c: any) => c.currency === 'USD').length} cheque(s) USD</p>
                       </div>
                     </div>
-                    <div className="px-6 py-4 bg-[#0ea5e9]/10 border-t border-[#0ea5e9]/20 flex justify-between items-center">
-                      <span className="font-bold text-[#f8fafc] uppercase tracking-wide text-sm">Total Activo</span>
+                    <div className="flex items-center justify-between border-t border-line bg-accent-bg px-6 py-4">
+                      <span className="text-sm font-bold uppercase tracking-wide text-ink">Total Activo</span>
                       <div className="text-right">
-                        <p className="text-xl font-bold font-mono text-[#0ea5e9]">{fmtARS(activo)}</p>
-                        {activoUSD !== 0 && <p className="text-sm font-bold font-mono text-sky-400">{fmtUSD(activoUSD)}</p>}
+                        <p className="font-mono text-xl font-bold text-accent">{fmtARS(activo)}</p>
+                        {activoUSD !== 0 && <p className="font-mono text-sm font-bold text-ink">{fmtUSD(activoUSD)}</p>}
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 </div>
                 {/* PASIVO Y PATRIMONIO */}
                 <div className="space-y-4">
-                  <div className="glass-panel rounded-2xl border border-amber-500/30 bg-amber-500/5 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-amber-500/20">
-                      <h3 className="text-base font-bold text-amber-400 uppercase tracking-wider">Pasivo</h3>
-                      <p className="text-xs text-[#64748b] mt-0.5">Deudas y obligaciones de la empresa</p>
+                  <Card className="overflow-hidden">
+                    <div className="border-b border-line bg-warn-bg px-6 py-4">
+                      <h3 className="text-base font-bold uppercase tracking-wider text-warn">Pasivo</h3>
+                      <p className="mt-0.5 text-xs text-faint">Deudas y obligaciones de la empresa</p>
                     </div>
                     <div className="px-6 py-4">
-                      <p className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-3">Pasivo Corriente</p>
+                      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-faint">Pasivo Corriente</p>
                       <div>
-                        <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                          <span className="text-sm text-[#d1dded] font-medium">Cuentas por Pagar</span>
-                          <span className="text-sm font-bold font-mono text-amber-400">{fmtARS(totalAP)}</span>
+                        <div className="flex items-center justify-between border-b border-line py-2">
+                          <span className="text-sm font-medium text-ink">Cuentas por Pagar</span>
+                          <span className="font-mono text-sm font-bold text-warn">{fmtARS(totalAP)}</span>
                         </div>
                         {ap.length > 0 ? (
-                          <div className="pl-4 mt-1 space-y-1">
+                          <div className="mt-1 space-y-1 pl-4">
                             {ap.map((p: any) => (
-                              <div key={p.clientId} className="flex justify-between text-xs text-[#64748b]">
+                              <div key={p.clientId} className="flex justify-between text-xs text-faint">
                                 <span>{p.clientName}</span>
                                 <div className="text-right">
-                                  {p.netARS > 0 && <span className="font-mono text-amber-500">{fmtARS(p.netARS)}</span>}
-                                  {p.netUSD > 0 && <span className="font-mono text-amber-300 ml-2">{fmtUSD(p.netUSD)}</span>}
+                                  {p.netARS > 0 && <span className="font-mono text-warn">{fmtARS(p.netARS)}</span>}
+                                  {p.netUSD > 0 && <span className="ml-2 font-mono text-warn">{fmtUSD(p.netUSD)}</span>}
                                 </div>
                               </div>
                             ))}
                           </div>
-                        ) : <p className="pl-4 mt-1 text-xs text-[#475569] italic">Sin cuentas por pagar abiertas</p>}
+                        ) : <p className="mt-1 pl-4 text-xs italic text-faint">Sin cuentas por pagar abiertas</p>}
                       </div>
                       {commExp > 0 && (
                         <div className="mt-4">
-                          <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                            <span className="text-sm text-[#d1dded] font-medium">Comisiones por Pagar</span>
-                            <span className="text-sm font-bold font-mono text-red-400">{fmtARS(commExp)}</span>
+                          <div className="flex items-center justify-between border-b border-line py-2">
+                            <span className="text-sm font-medium text-ink">Comisiones por Pagar</span>
+                            <span className="font-mono text-sm font-bold text-negative">{fmtARS(commExp)}</span>
                           </div>
-                          <p className="pl-4 mt-1 text-xs text-[#475569] italic">Gastos de comisión devengados pendientes de pago</p>
+                          <p className="mt-1 pl-4 text-xs italic text-faint">Gastos de comisión devengados pendientes de pago</p>
                         </div>
                       )}
                     </div>
-                    <div className="px-6 py-4 bg-amber-500/10 border-t border-amber-500/20 flex justify-between items-center">
-                      <span className="font-bold text-[#f8fafc] uppercase tracking-wide text-sm">Total Pasivo</span>
+                    <div className="flex items-center justify-between border-t border-line bg-warn-bg px-6 py-4">
+                      <span className="text-sm font-bold uppercase tracking-wide text-ink">Total Pasivo</span>
                       <div className="text-right">
-                        <p className="text-xl font-bold font-mono text-amber-400">{fmtARS(pasivo)}</p>
-                        {pasivoUSD !== 0 && <p className="text-sm font-bold font-mono text-amber-300">{fmtUSD(pasivoUSD)}</p>}
+                        <p className="font-mono text-xl font-bold text-warn">{fmtARS(pasivo)}</p>
+                        {pasivoUSD !== 0 && <p className="font-mono text-sm font-bold text-warn">{fmtUSD(pasivoUSD)}</p>}
                       </div>
                     </div>
-                  </div>
-                  <div className={`glass-panel rounded-2xl border overflow-hidden ${patrimonio >= 0 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
-                    <div className={`px-6 py-4 border-b ${patrimonio >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
-                      <h3 className={`text-base font-bold uppercase tracking-wider ${patrimonio >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>Patrimonio Neto</h3>
-                      <p className="text-xs text-[#64748b] mt-0.5">Capital + utilidades acumuladas del ejercicio</p>
+                  </Card>
+                  <Card className="overflow-hidden">
+                    <div className={`border-b border-line px-6 py-4 ${patrimonio >= 0 ? 'bg-positive-bg' : 'bg-negative-bg'}`}>
+                      <h3 className={`text-base font-bold uppercase tracking-wider ${patrimonio >= 0 ? 'text-positive' : 'text-negative'}`}>Patrimonio Neto</h3>
+                      <p className="mt-0.5 text-xs text-faint">Capital + utilidades acumuladas del ejercicio</p>
                     </div>
                     <div className="px-6 py-4">
                       {(aportes.ARS > 0 || aportes.USD > 0) && (
-                        <div className="flex justify-between items-center py-2 border-b border-[#334155]/20">
-                          <span className="text-sm text-[#d1dded] font-medium">Aportes de Socios</span>
+                        <div className="flex items-center justify-between border-b border-line py-2">
+                          <span className="text-sm font-medium text-ink">Aportes de Socios</span>
                           <div className="text-right">
-                            <p className={`text-sm font-bold font-mono ${patrimonio >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtARS(aportes.ARS)}</p>
-                            {aportes.USD > 0 && <p className={`text-xs font-bold font-mono ${patrimonioUSD >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>{fmtUSD(aportes.USD)}</p>}
+                            <p className={`font-mono text-sm font-bold ${patrimonio >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtARS(aportes.ARS)}</p>
+                            {aportes.USD > 0 && <p className={`font-mono text-xs font-bold ${patrimonioUSD >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtUSD(aportes.USD)}</p>}
                           </div>
                         </div>
                       )}
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-[#d1dded] font-medium">Patrimonio Neto</span>
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm font-medium text-ink">Patrimonio Neto</span>
                         <div className="text-right">
-                          <p className={`text-sm font-bold font-mono ${patrimonio >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtARS(patrimonio)}</p>
-                          {patrimonioUSD !== 0 && <p className={`text-xs font-bold font-mono ${patrimonioUSD >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>{fmtUSD(patrimonioUSD)}</p>}
+                          <p className={`font-mono text-sm font-bold ${patrimonio >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtARS(patrimonio)}</p>
+                          {patrimonioUSD !== 0 && <p className={`font-mono text-xs font-bold ${patrimonioUSD >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtUSD(patrimonioUSD)}</p>}
                         </div>
                       </div>
-                      <p className="text-xs text-[#475569] mt-1 italic">Activo − Pasivo = Patrimonio Neto</p>
+                      <p className="mt-1 text-xs italic text-faint">Activo − Pasivo = Patrimonio Neto</p>
                     </div>
-                    <div className={`px-6 py-4 border-t flex justify-between items-center ${patrimonio >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                      <span className="font-bold text-[#f8fafc] uppercase tracking-wide text-sm">Total Patrimonio</span>
+                    <div className={`flex items-center justify-between border-t border-line px-6 py-4 ${patrimonio >= 0 ? 'bg-positive-bg' : 'bg-negative-bg'}`}>
+                      <span className="text-sm font-bold uppercase tracking-wide text-ink">Total Patrimonio</span>
                       <div className="text-right">
-                        <p className={`text-xl font-bold font-mono ${patrimonio >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>{fmtARS(patrimonio)}</p>
-                        {patrimonioUSD !== 0 && <p className={`text-sm font-bold font-mono ${patrimonioUSD >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtUSD(patrimonioUSD)}</p>}
+                        <p className={`font-mono text-xl font-bold ${patrimonio >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtARS(patrimonio)}</p>
+                        {patrimonioUSD !== 0 && <p className={`font-mono text-sm font-bold ${patrimonioUSD >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtUSD(patrimonioUSD)}</p>}
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 </div>
 
                 {/* VERIFICACIÓN — full width */}
                 <div className="lg:col-span-2">
-                  <div className="glass-panel rounded-2xl border border-[#334155]/50 px-6 py-4">
-                    <p className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">Verificación: Activo = Pasivo + Patrimonio</p>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono text-[#0ea5e9] font-bold">{fmtARS(activo)}</span>
-                      <span className="text-[#475569] mx-2">=</span>
-                      <span className="font-mono text-amber-400 font-bold">{fmtARS(pasivo)}</span>
-                      <span className="text-[#475569] mx-2">+</span>
-                      <span className={`font-mono font-bold ${patrimonio >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmtARS(patrimonio)}</span>
-                      <span className={`ml-3 text-xs font-bold px-2 py-0.5 rounded ${Math.abs(activo - pasivo - patrimonio) < 1 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                  <Card className="px-6 py-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-faint">Verificación: Activo = Pasivo + Patrimonio</p>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="font-mono font-bold text-accent">{fmtARS(activo)}</span>
+                      <span className="mx-2 text-faint">=</span>
+                      <span className="font-mono font-bold text-warn">{fmtARS(pasivo)}</span>
+                      <span className="mx-2 text-faint">+</span>
+                      <span className={`font-mono font-bold ${patrimonio >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtARS(patrimonio)}</span>
+                      <span className={`ml-3 rounded px-2 py-0.5 text-xs font-bold ${Math.abs(activo - pasivo - patrimonio) < 1 ? 'bg-positive-bg text-positive' : 'bg-negative-bg text-negative'}`}>
                         {Math.abs(activo - pasivo - patrimonio) < 1 ? '✓ Cuadra' : '⚠ Descuadre'}
                       </span>
                     </div>
                     {activoUSD !== 0 && (
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-mono text-sky-400 font-bold">{fmtUSD(activoUSD)}</span>
-                        <span className="text-[#475569] mx-2">=</span>
-                        <span className="font-mono text-amber-300 font-bold">{fmtUSD(pasivoUSD)}</span>
-                        <span className="text-[#475569] mx-2">+</span>
-                        <span className={`font-mono font-bold ${patrimonioUSD >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>{fmtUSD(patrimonioUSD)}</span>
-                        <span className={`ml-3 text-xs font-bold px-2 py-0.5 rounded ${Math.abs(activoUSD - pasivoUSD - patrimonioUSD) < 0.01 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <span className="font-mono font-bold text-ink">{fmtUSD(activoUSD)}</span>
+                        <span className="mx-2 text-faint">=</span>
+                        <span className="font-mono font-bold text-warn">{fmtUSD(pasivoUSD)}</span>
+                        <span className="mx-2 text-faint">+</span>
+                        <span className={`font-mono font-bold ${patrimonioUSD >= 0 ? 'text-positive' : 'text-negative'}`}>{fmtUSD(patrimonioUSD)}</span>
+                        <span className={`ml-3 rounded px-2 py-0.5 text-xs font-bold ${Math.abs(activoUSD - pasivoUSD - patrimonioUSD) < 0.01 ? 'bg-positive-bg text-positive' : 'bg-negative-bg text-negative'}`}>
                           {Math.abs(activoUSD - pasivoUSD - patrimonioUSD) < 0.01 ? '✓ Cuadra' : '⚠ Descuadre'}
                         </span>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 </div>
 
                 {/* POSICIÓN NETA FX — full width below the two columns */}
                 <div className="lg:col-span-2">
-                  <div className="glass-panel rounded-2xl border border-violet-500/30 bg-violet-500/5 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-violet-500/20 flex justify-between items-center">
+                  <Card className="overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-line bg-accent-bg px-6 py-4">
                       <div>
-                        <h3 className="text-base font-bold text-violet-400 uppercase tracking-wider">Posición Neta FX</h3>
-                        <p className="text-xs text-[#64748b] mt-0.5">Acumulado histórico de compras y ventas de divisas · {fxPos.totalOps} operaciones</p>
+                        <h3 className="text-base font-bold uppercase tracking-wider text-accent">Posición Neta FX</h3>
+                        <p className="mt-0.5 text-xs text-faint">Acumulado histórico de compras y ventas de divisas · {fxPos.totalOps} operaciones</p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${fxPos.netUSD >= 0 ? 'bg-violet-500/20 text-violet-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${fxPos.netUSD >= 0 ? 'bg-accent-bg text-accent' : 'bg-negative-bg text-negative'}`}>
                         {fxPos.netUSD >= 0 ? 'Posición Vendedora' : 'Posición Compradora'}
                       </span>
                     </div>
-                    <div className="px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-                        <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Compras USD</p>
-                        <p className="text-lg font-bold font-mono text-sky-400">{fmtUSD(fxPos.comprasUSD)}</p>
-                        <p className="text-xs font-mono text-[#475569] mt-1">{fmtARS(fxPos.comprasARS)} pagados</p>
+                    <div className="grid grid-cols-2 gap-4 px-6 py-4 sm:grid-cols-4">
+                      <div className="rounded-xl border border-line bg-canvas p-4">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-faint">Compras USD</p>
+                        <p className="font-mono text-lg font-bold text-ink">{fmtUSD(fxPos.comprasUSD)}</p>
+                        <p className="mt-1 font-mono text-xs text-faint">{fmtARS(fxPos.comprasARS)} pagados</p>
                       </div>
-                      <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-                        <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Ventas USD</p>
-                        <p className="text-lg font-bold font-mono text-emerald-400">{fmtUSD(fxPos.ventasUSD)}</p>
-                        <p className="text-xs font-mono text-[#475569] mt-1">{fmtARS(fxPos.ventasARS)} cobrados</p>
+                      <div className="rounded-xl border border-line bg-canvas p-4">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-faint">Ventas USD</p>
+                        <p className="font-mono text-lg font-bold text-ink">{fmtUSD(fxPos.ventasUSD)}</p>
+                        <p className="mt-1 font-mono text-xs text-faint">{fmtARS(fxPos.ventasARS)} cobrados</p>
                       </div>
-                      <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-                        <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Diferencial USD</p>
-                        <p className={`text-lg font-bold font-mono ${fxPos.netUSD >= 0 ? 'text-violet-300' : 'text-rose-400'}`}>{fmtUSD(Math.abs(fxPos.netUSD))}</p>
-                        <p className="text-xs text-[#475569] mt-1">{fxPos.netUSD >= 0 ? 'Vendidos neto' : 'Comprados neto'}</p>
+                      <div className="rounded-xl border border-line bg-canvas p-4">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-faint">Diferencial USD</p>
+                        <p className={`font-mono text-lg font-bold ${fxPos.netUSD >= 0 ? 'text-accent' : 'text-negative'}`}>{fmtUSD(Math.abs(fxPos.netUSD))}</p>
+                        <p className="mt-1 text-xs text-faint">{fxPos.netUSD >= 0 ? 'Vendidos neto' : 'Comprados neto'}</p>
                       </div>
-                      <div className="bg-[#0f172a]/40 rounded-xl p-4 border border-[#334155]/30">
-                        <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Diferencial ARS</p>
-                        <p className={`text-lg font-bold font-mono ${(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'text-violet-300' : 'text-rose-400'}`}>{fmtARS(Math.abs(fxPos.ventasARS - fxPos.comprasARS))}</p>
-                        <p className="text-xs text-[#475569] mt-1">{(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'ARS cobrados neto' : 'ARS pagados neto'}</p>
+                      <div className="rounded-xl border border-line bg-canvas p-4">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-faint">Diferencial ARS</p>
+                        <p className={`font-mono text-lg font-bold ${(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'text-accent' : 'text-negative'}`}>{fmtARS(Math.abs(fxPos.ventasARS - fxPos.comprasARS))}</p>
+                        <p className="mt-1 text-xs text-faint">{(fxPos.ventasARS - fxPos.comprasARS) >= 0 ? 'ARS cobrados neto' : 'ARS pagados neto'}</p>
                       </div>
                     </div>
                     {/* TC implícito + mark-to-market */}
                     {(() => {
                       const netUSDheld     = fxPos.comprasUSD - fxPos.ventasUSD;   // positivo = tenés USD
                       const netARSreceived = fxPos.ventasARS  - fxPos.comprasARS;  // positivo = recibiste ARS
-                      // TC implícito: ARS diferencial / USD diferencial (breakeven de la posición)
                       const tcImplicito = Math.abs(netUSDheld) > 0.001
                         ? Math.abs(netARSreceived) / Math.abs(netUSDheld)
                         : null;
-                      const isVendedora = netUSDheld < 0; // vendiste más USD de los que compraste
+                      const isVendedora = netUSDheld < 0;
 
                       const tc = parseFloat(fxTc);
-                      // P&L = ARS netos recibidos + USD netos en mano valorados al TC de referencia
                       const resultado = !isNaN(tc) && tc > 0 ? netARSreceived + netUSDheld * tc : null;
 
                       return (
-                        <div className="border-t border-violet-500/10">
-                          {/* Fila 1: TC implícito de la posición */}
+                        <div className="border-t border-line">
                           {tcImplicito !== null && (
-                            <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-violet-500/10">
+                            <div className="flex flex-col items-start gap-4 border-b border-line px-6 py-4 sm:flex-row sm:items-center">
                               <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold text-[#64748b] uppercase tracking-wider">TC de la posición</span>
-                                <span className="text-xl font-bold font-mono text-violet-300">
+                                <span className="text-xs font-bold uppercase tracking-wider text-faint">TC de la posición</span>
+                                <span className="font-mono text-xl font-bold text-accent">
                                   {tcImplicito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
-                              <p className="text-xs text-[#64748b] italic">
+                              <p className="text-xs italic text-faint">
                                 {isVendedora
                                   ? `Comprá por debajo de este TC → ganás · Comprá por encima → perdés`
                                   : `Vendé por encima de este TC → ganás · Vendé por debajo → perdés`}
                               </p>
                             </div>
                           )}
-                          {/* Fila 2: TC de referencia → resultado */}
-                          <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          <div className="flex flex-col items-start gap-4 px-6 py-4 sm:flex-row sm:items-center">
                             <div className="flex items-center gap-3">
-                              <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">TC de referencia</label>
-                              <div className="flex items-center bg-[#0f172a]/60 border border-[#334155]/50 rounded-lg px-3 py-1.5">
-                                <span className="text-xs text-[#475569] mr-1">$</span>
+                              <label className="whitespace-nowrap text-xs font-bold uppercase tracking-wider text-faint">TC de referencia</label>
+                              <div className="flex items-center rounded-lg border border-line bg-surface px-3 py-1.5">
+                                <span className="mr-1 text-xs text-faint">$</span>
                                 <input
                                   type="number"
                                   min="0"
@@ -401,34 +398,34 @@ export default function ReportsPage() {
                                   placeholder="ej. 1400"
                                   value={fxTc}
                                   onChange={e => setFxTc(e.target.value)}
-                                  className="bg-transparent text-sm font-mono text-[#d1dded] w-28 focus:outline-none"
+                                  className="w-28 bg-transparent font-mono text-sm text-ink focus:outline-none"
                                 />
                               </div>
                             </div>
                             {resultado !== null ? (
-                              <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border ${
-                                resultado >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'
+                              <div className={`flex items-center gap-3 rounded-xl border px-4 py-2 ${
+                                resultado >= 0 ? 'border-positive/20 bg-positive-bg' : 'border-negative/20 bg-negative-bg'
                               }`}>
-                                <span className="text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">
+                                <span className="whitespace-nowrap text-xs font-bold uppercase tracking-wider text-faint">
                                   Resultado a TC {tc.toLocaleString('es-AR')}
                                 </span>
-                                <span className={`text-xl font-bold font-mono ${resultado >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <span className={`font-mono text-xl font-bold ${resultado >= 0 ? 'text-positive' : 'text-negative'}`}>
                                   {resultado >= 0 ? '+' : ''}{fmtARS(resultado)}
                                 </span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  resultado >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                  resultado >= 0 ? 'bg-positive-bg text-positive' : 'bg-negative-bg text-negative'
                                 }`}>
                                   {resultado >= 0 ? 'Ganancia' : 'Pérdida'}
                                 </span>
                               </div>
                             ) : (
-                              <p className="text-xs text-[#475569] italic">Ingresá un TC para calcular la ganancia o pérdida sobre el diferencial</p>
+                              <p className="text-xs italic text-faint">Ingresá un TC para calcular la ganancia o pérdida sobre el diferencial</p>
                             )}
                           </div>
                         </div>
                       );
                     })()}
-                  </div>
+                  </Card>
                 </div>
               </div>
             );
@@ -441,77 +438,77 @@ export default function ReportsPage() {
           ════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'income-statement' && (
         <div className="animate-in fade-in duration-300">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h2 className="text-xl font-bold text-[#f8fafc]">Estado de Resultados</h2>
-              <p className="text-sm text-[#64748b] mt-0.5">Ingresos, gastos y utilidad neta del período.</p>
+              <h2 className="text-xl font-bold text-ink">Estado de Resultados</h2>
+              <p className="mt-0.5 text-sm text-faint">Ingresos, gastos y utilidad neta del período.</p>
             </div>
-            <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 border border-[#334155]/50">
+            <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-2">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-0.5">Desde</label>
-                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-[#d1dded] text-sm focus:outline-none" />
+                <label className="mb-0.5 block text-[10px] font-bold uppercase text-faint">Desde</label>
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-sm text-ink focus:outline-none" />
               </div>
-              <div className="w-px h-7 bg-[#334155]/50" />
+              <div className="h-7 w-px bg-line" />
               <div>
-                <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-0.5">Hasta</label>
-                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-[#d1dded] text-sm focus:outline-none" />
+                <label className="mb-0.5 block text-[10px] font-bold uppercase text-faint">Hasta</label>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-sm text-ink focus:outline-none" />
               </div>
             </div>
           </div>
           {plLoading ? (
-            <div className="flex items-center justify-center py-20"><div className="w-8 h-8 rounded-full border-2 border-[#0ea5e9] border-t-transparent animate-spin" /></div>
+            <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>
           ) : (
-            <div className="max-w-2xl mx-auto">
-              <div className="glass-panel rounded-2xl border border-[#334155]/50 overflow-hidden">
-                <div className="px-6 py-4 border-b border-[#334155]/30 bg-emerald-500/5">
-                  <p className="text-xs font-bold text-emerald-500/80 uppercase tracking-widest mb-3">Ingresos</p>
+            <div className="mx-auto max-w-2xl">
+              <Card className="overflow-hidden">
+                <div className="border-b border-line bg-positive-bg px-6 py-4">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-widest text-positive">Ingresos</p>
                   {incomeLines.length === 0 ? (
-                    <p className="text-sm text-[#475569] italic py-2">Sin ingresos en el período</p>
+                    <p className="py-2 text-sm italic text-faint">Sin ingresos en el período</p>
                   ) : (
                     <div className="space-y-2">
                       {incomeLines.map((l: any) => (
-                        <div key={l.id} className="flex justify-between text-sm py-1 border-b border-[#334155]/15 last:border-0">
-                          <span className="text-[#94a3b8] truncate pr-4">{l.description}</span>
-                          <span className="font-mono font-semibold text-emerald-400 shrink-0">+ {fmtARS(Number(l.amount))}</span>
+                        <div key={l.id} className="flex justify-between border-b border-line py-1 text-sm last:border-0">
+                          <span className="truncate pr-4 text-muted">{l.description}</span>
+                          <span className="shrink-0 font-mono font-semibold text-positive">+ {fmtARS(Number(l.amount))}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                <div className="px-6 py-3 flex justify-between items-center bg-emerald-500/10 border-b border-emerald-500/20">
-                  <span className="text-sm font-bold text-emerald-300 uppercase tracking-wide">= Total Ingresos</span>
-                  <span className="font-mono font-bold text-emerald-300 text-lg">{fmtARS(totalIncome)}</span>
+                <div className="flex items-center justify-between border-b border-line bg-positive-bg px-6 py-3">
+                  <span className="text-sm font-bold uppercase tracking-wide text-positive">= Total Ingresos</span>
+                  <span className="font-mono text-lg font-bold text-positive">{fmtARS(totalIncome)}</span>
                 </div>
-                <div className="px-6 py-4 border-b border-[#334155]/30 bg-red-500/5">
-                  <p className="text-xs font-bold text-red-500/80 uppercase tracking-widest mb-3">Gastos</p>
+                <div className="border-b border-line bg-negative-bg px-6 py-4">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-widest text-negative">Gastos</p>
                   {expenseLines.length === 0 ? (
-                    <p className="text-sm text-[#475569] italic py-2">Sin gastos en el período</p>
+                    <p className="py-2 text-sm italic text-faint">Sin gastos en el período</p>
                   ) : (
                     <div className="space-y-2">
                       {expenseLines.map((l: any) => (
-                        <div key={l.id} className="flex justify-between text-sm py-1 border-b border-[#334155]/15 last:border-0">
-                          <span className="text-[#94a3b8] truncate pr-4">{l.description}</span>
-                          <span className="font-mono font-semibold text-red-400 shrink-0">− {fmtARS(Number(l.amount))}</span>
+                        <div key={l.id} className="flex justify-between border-b border-line py-1 text-sm last:border-0">
+                          <span className="truncate pr-4 text-muted">{l.description}</span>
+                          <span className="shrink-0 font-mono font-semibold text-negative">− {fmtARS(Number(l.amount))}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                <div className="px-6 py-3 flex justify-between items-center bg-red-500/10 border-b border-red-500/20">
-                  <span className="text-sm font-bold text-red-300 uppercase tracking-wide">= Total Gastos</span>
-                  <span className="font-mono font-bold text-red-300 text-lg">− {fmtARS(totalExpense)}</span>
+                <div className="flex items-center justify-between border-b border-line bg-negative-bg px-6 py-3">
+                  <span className="text-sm font-bold uppercase tracking-wide text-negative">= Total Gastos</span>
+                  <span className="font-mono text-lg font-bold text-negative">− {fmtARS(totalExpense)}</span>
                 </div>
-                <div className={`px-6 py-5 flex justify-between items-center ${netResult >= 0 ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
+                <div className={`flex items-center justify-between px-6 py-5 ${netResult >= 0 ? 'bg-positive-bg' : 'bg-negative-bg'}`}>
                   <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${netResult >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>= Utilidad Neta</p>
-                    <p className="text-xs text-[#64748b]">Resultado del ejercicio · {startDate} → {endDate}</p>
+                    <p className={`mb-0.5 text-xs font-bold uppercase tracking-widest ${netResult >= 0 ? 'text-positive' : 'text-negative'}`}>= Utilidad Neta</p>
+                    <p className="text-xs text-faint">Resultado del ejercicio · {startDate} → {endDate}</p>
                   </div>
-                  <span className={`font-mono font-black text-3xl ${netResult >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                  <span className={`font-mono text-3xl font-black ${netResult >= 0 ? 'text-positive' : 'text-negative'}`}>
                     {netResult >= 0 ? '+' : '−'} {fmtARS(Math.abs(netResult))}
                   </span>
                 </div>
-              </div>
-              <p className="text-xs text-[#475569] text-center mt-3 italic">Se excluyen aportes de capital, fondeos de clientes y retiros de socios (no son P&L operativo).</p>
+              </Card>
+              <p className="mt-3 text-center text-xs italic text-faint">Se excluyen aportes de capital, fondeos de clientes y retiros de socios (no son P&L operativo).</p>
             </div>
           )}
         </div>

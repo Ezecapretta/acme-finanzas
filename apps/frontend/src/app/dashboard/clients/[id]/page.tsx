@@ -4,6 +4,8 @@ import ExcelJS from 'exceljs';
 import { fetchApi } from '@/services/api';
 import { getUserId } from '@/services/auth';
 import { useParams } from 'next/navigation';
+import { Card } from '@/components/ui/Card';
+import { inputClass, selectClass } from '@/components/ui/forms';
 
 interface Movement {
   id: string;
@@ -469,49 +471,48 @@ export default function ClientProfilePage() {
     }
   };
 
-  if (loading) return <div className="p-6 text-[#aab6c7] animate-pulse">Cargando ficha de cliente...</div>;
-  if (!client) return <div className="p-6 text-red-400">Error: Cliente no encontrado</div>;
+  if (loading) return <div className="animate-pulse p-6 text-muted">Cargando ficha de cliente...</div>;
+  if (!client) return <div className="p-6 text-negative">Error: Cliente no encontrado</div>;
 
   return (
-    <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500 pb-12 relative">
+    <div className="relative mx-auto h-full w-full max-w-[1400px] animate-in fade-in duration-500 pb-12">
 
       {/* Opening Balance Modal */}
       {showOBModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <form onSubmit={handleOpeningBalance} className="glass-panel w-full max-w-md p-8 rounded-2xl shadow-xl flex flex-col space-y-5 animate-in zoom-in-95 duration-300 border border-[#334155]/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <h2 className="text-2xl font-bold text-[#f8fafc]">Registrar Saldo Inicial</h2>
-            <p className="text-sm text-[#64748b]">Acreedor = le debemos al cliente &middot; Deudor = el cliente nos debe</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+          <form onSubmit={handleOpeningBalance} className="flex w-full max-w-md flex-col space-y-5 rounded-[14px] border border-line bg-surface p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <h2 className="text-2xl font-semibold text-ink">Registrar Saldo Inicial</h2>
+            <p className="text-sm text-faint">Acreedor = le debemos al cliente &middot; Deudor = el cliente nos debe</p>
             <div className="space-y-3">
-              <div className="flex gap-2 items-center">
-                <span className="text-xs text-[#7e8b9d] w-8">ARS</span>
+              <div className="flex items-center gap-2">
+                <span className="w-8 text-xs text-faint">ARS</span>
                 <input
                   type="number" min="0" step="0.01" placeholder="0.00"
                   value={obForm.arsAmount}
                   onChange={e => setObForm(f => ({ ...f, arsAmount: e.target.value }))}
-                  className="flex-1 bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 transition-all"
+                  className={`${inputClass} flex-1`}
                 />
                 <select
                   value={obForm.arsDir}
                   onChange={e => setObForm(f => ({ ...f, arsDir: e.target.value }))}
-                  className="bg-[#081329] border border-[#334155] rounded-xl px-3 py-3 text-[#d1dded] text-sm focus:outline-none focus:border-[#0ea5e9]/50"
+                  className={`${selectClass} w-auto px-3 text-sm`}
                 >
                   <option value="ACREEDOR">Acreedor</option>
                   <option value="DEUDOR">Deudor</option>
                 </select>
               </div>
-              <div className="flex gap-2 items-center">
-                <span className="text-xs text-[#7e8b9d] w-8">USD</span>
+              <div className="flex items-center gap-2">
+                <span className="w-8 text-xs text-faint">USD</span>
                 <input
                   type="number" min="0" step="0.01" placeholder="0.00"
                   value={obForm.usdAmount}
                   onChange={e => setObForm(f => ({ ...f, usdAmount: e.target.value }))}
-                  className="flex-1 bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 transition-all"
+                  className={`${inputClass} flex-1`}
                 />
                 <select
                   value={obForm.usdDir}
                   onChange={e => setObForm(f => ({ ...f, usdDir: e.target.value }))}
-                  className="bg-[#081329] border border-[#334155] rounded-xl px-3 py-3 text-[#d1dded] text-sm focus:outline-none focus:border-[#0ea5e9]/50"
+                  className={`${selectClass} w-auto px-3 text-sm`}
                 >
                   <option value="ACREEDOR">Acreedor</option>
                   <option value="DEUDOR">Deudor</option>
@@ -519,10 +520,10 @@ export default function ClientProfilePage() {
               </div>
             </div>
             <div className="flex space-x-3 pt-2">
-              <button type="button" onClick={() => { setShowOBModal(false); setObForm(emptyOB()); }} className="flex-1 px-4 py-3 rounded-xl border border-[#334155] text-[#94a3b8] hover:text-white hover:bg-white/5 font-medium transition-colors">
+              <button type="button" onClick={() => { setShowOBModal(false); setObForm(emptyOB()); }} className="flex-1 rounded-xl border border-line px-4 py-3 font-medium text-muted transition-colors hover:bg-track hover:text-ink">
                 Cancelar
               </button>
-              <button type="submit" disabled={obSaving || (Number(obForm.arsAmount) <= 0 && Number(obForm.usdAmount) <= 0)} className="flex-1 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <button type="submit" disabled={obSaving || (Number(obForm.arsAmount) <= 0 && Number(obForm.usdAmount) <= 0)} className="flex-1 rounded-xl bg-positive px-4 py-3 font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
                 {obSaving ? 'Guardando...' : 'Registrar'}
               </button>
             </div>
@@ -532,37 +533,36 @@ export default function ClientProfilePage() {
 
       {/* Client Adjustment Modal */}
       {showAdjModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <form onSubmit={handleClientAdjustment} className="glass-panel w-full max-w-md p-8 rounded-2xl shadow-xl flex flex-col space-y-5 animate-in zoom-in-95 duration-300 border border-[#334155]/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <h2 className="text-2xl font-bold text-[#f8fafc]">Ajuste de Cuenta Corriente</h2>
-            <p className="text-sm text-[#64748b]">Registra un cargo o abono sin movimiento de caja.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+          <form onSubmit={handleClientAdjustment} className="flex w-full max-w-md flex-col space-y-5 rounded-[14px] border border-line bg-surface p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <h2 className="text-2xl font-semibold text-ink">Ajuste de Cuenta Corriente</h2>
+            <p className="text-sm text-faint">Registra un cargo o abono sin movimiento de caja.</p>
             <div className="space-y-4">
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 <input
                   type="number" min="0.01" step="0.01" placeholder="Importe" required
                   value={adjForm.amount}
                   onChange={e => setAdjForm(f => ({ ...f, amount: e.target.value }))}
-                  className="flex-1 bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 transition-all"
+                  className={`${inputClass} flex-1`}
                 />
                 <select
                   value={adjForm.currency}
                   onChange={e => setAdjForm(f => ({ ...f, currency: e.target.value }))}
-                  className="bg-[#081329] border border-[#334155] rounded-xl px-3 py-3 text-[#d1dded] text-sm focus:outline-none focus:border-[#0ea5e9]/50 w-24"
+                  className={`${selectClass} w-24 px-3 text-sm`}
                 >
                   <option value="ARS">ARS</option>
                   <option value="USD">USD</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#94a3b8] uppercase mb-2">Tipo de ajuste</label>
+                <label className="mb-2 block text-xs font-bold uppercase text-muted">Tipo de ajuste</label>
                 <div className="flex gap-3">
                   <button type="button"
                     onClick={() => setAdjForm(f => ({ ...f, direction: 'ACREEDOR' }))}
-                    className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
+                    className={`flex-1 rounded-xl border py-3 text-sm font-medium transition-all ${
                       adjForm.direction === 'ACREEDOR'
-                        ? 'bg-emerald-600/20 border-emerald-500/50 text-emerald-300'
-                        : 'border-[#334155] text-[#64748b] hover:text-white hover:bg-white/5'
+                        ? 'border-positive bg-positive-bg text-positive'
+                        : 'border-line text-muted hover:bg-track hover:text-ink'
                     }`}
                   >
                     Abono / Crédito
@@ -570,10 +570,10 @@ export default function ClientProfilePage() {
                   </button>
                   <button type="button"
                     onClick={() => setAdjForm(f => ({ ...f, direction: 'DEUDOR' }))}
-                    className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all ${
+                    className={`flex-1 rounded-xl border py-3 text-sm font-medium transition-all ${
                       adjForm.direction === 'DEUDOR'
-                        ? 'bg-red-600/20 border-red-500/50 text-red-300'
-                        : 'border-[#334155] text-[#64748b] hover:text-white hover:bg-white/5'
+                        ? 'border-negative bg-negative-bg text-negative'
+                        : 'border-line text-muted hover:bg-track hover:text-ink'
                     }`}
                   >
                     Cargo / Débito
@@ -582,20 +582,20 @@ export default function ClientProfilePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#94a3b8] uppercase mb-1">Concepto (opcional)</label>
+                <label className="mb-1 block text-xs font-bold uppercase text-muted">Concepto (opcional)</label>
                 <input
                   type="text" placeholder="Ej: Comisión, descuento, diferencia..."
                   value={adjForm.description}
                   onChange={e => setAdjForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 transition-all placeholder-[#475569]"
+                  className={inputClass}
                 />
               </div>
             </div>
             <div className="flex space-x-3 pt-2">
-              <button type="button" onClick={() => { setShowAdjModal(false); setAdjForm(emptyAdj()); }} className="flex-1 px-4 py-3 rounded-xl border border-[#334155] text-[#94a3b8] hover:text-white hover:bg-white/5 font-medium transition-colors">
+              <button type="button" onClick={() => { setShowAdjModal(false); setAdjForm(emptyAdj()); }} className="flex-1 rounded-xl border border-line px-4 py-3 font-medium text-muted transition-colors hover:bg-track hover:text-ink">
                 Cancelar
               </button>
-              <button type="submit" disabled={adjSaving || Number(adjForm.amount) <= 0} className="flex-1 px-4 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <button type="submit" disabled={adjSaving || Number(adjForm.amount) <= 0} className="flex-1 rounded-xl bg-warn px-4 py-3 font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
                 {adjSaving ? 'Guardando...' : 'Registrar Ajuste'}
               </button>
             </div>
@@ -605,32 +605,30 @@ export default function ClientProfilePage() {
 
       {/* Edit Modal */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <form onSubmit={handleUpdateClient} className="glass-panel w-full max-w-md p-8 rounded-2xl shadow-xl flex flex-col space-y-5 animate-in zoom-in-95 duration-300 border border-[#334155]/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#0ea5e9]/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <h2 className="text-2xl font-bold text-[#f8fafc]">Editar Información</h2>
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+          <form onSubmit={handleUpdateClient} className="flex w-full max-w-md flex-col space-y-5 rounded-[14px] border border-line bg-surface p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <h2 className="text-2xl font-semibold text-ink">Editar Información</h2>
+
             <div>
-              <label className="block text-xs font-bold text-[#94a3b8] uppercase mb-1">Nombre / Razón Social</label>
-              <input type="text" required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="w-full bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 focus:ring-1 focus:ring-[#0ea5e9]/50 transition-all placeholder-[#475569]" placeholder="Ingresar nombre..." />
-            </div>
-            
-            <div>
-              <label className="block text-xs font-bold text-[#94a3b8] uppercase mb-1">Teléfono (Opcional)</label>
-              <input type="text" value={editForm.tax_id} onChange={e => setEditForm({ ...editForm, tax_id: e.target.value })} className="w-full bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 focus:ring-1 focus:ring-[#0ea5e9]/50 transition-all placeholder-[#475569]" placeholder="Ej: 20-12345678-9" />
+              <label className="mb-1 block text-xs font-bold uppercase text-muted">Nombre / Razón Social</label>
+              <input type="text" required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputClass} placeholder="Ingresar nombre..." />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#94a3b8] uppercase mb-1">Email (Opcional)</label>
-              <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="w-full bg-[#081329]/50 border border-[#334155] rounded-xl px-4 py-3 text-[#f8fafc] focus:outline-none focus:border-[#0ea5e9]/50 focus:ring-1 focus:ring-[#0ea5e9]/50 transition-all placeholder-[#475569]" placeholder="correo@ejemplo.com" />
+              <label className="mb-1 block text-xs font-bold uppercase text-muted">Teléfono (Opcional)</label>
+              <input type="text" value={editForm.tax_id} onChange={e => setEditForm({ ...editForm, tax_id: e.target.value })} className={inputClass} placeholder="Ej: 20-12345678-9" />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-bold uppercase text-muted">Email (Opcional)</label>
+              <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className={inputClass} placeholder="correo@ejemplo.com" />
             </div>
 
             <div className="flex space-x-3 pt-2">
-              <button type="button" onClick={() => setIsEditing(false)} className="flex-1 px-4 py-3 rounded-xl border border-[#334155] text-[#94a3b8] hover:text-white hover:bg-white/5 font-medium transition-colors">
+              <button type="button" onClick={() => setIsEditing(false)} className="flex-1 rounded-xl border border-line px-4 py-3 font-medium text-muted transition-colors hover:bg-track hover:text-ink">
                 Cancelar
               </button>
-              <button type="submit" disabled={isSaving} className={`flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0ea5e9] to-[#3b82f6] text-white font-bold shadow-lg shadow-[#0ea5e9]/20 hover:shadow-[#0ea5e9]/40 transition-all ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}>
+              <button type="submit" disabled={isSaving} className={`flex-1 rounded-xl bg-ink px-4 py-3 font-bold text-white shadow-sm transition-all hover:opacity-85 ${isSaving ? 'cursor-not-allowed opacity-70' : ''}`}>
                 {isSaving ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
@@ -638,45 +636,45 @@ export default function ClientProfilePage() {
         </div>
       )}
 
-      <header className="mb-6 flex justify-between items-start">
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <button onClick={() => window.history.back()} className="text-[#aab6c7] hover:text-[#0ea5e9] transition-colors p-2 rounded-full border border-transparent hover:border-[#0ea5e9]/30 bg-[#081329]">
+          <button onClick={() => window.history.back()} className="rounded-full border border-line bg-surface p-2 text-muted transition-colors hover:text-ink">
              ← Volver
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[#f8fafc] mb-1 tracking-tight">Resumen de Cuenta</h1>
-            <div className="flex items-center space-x-3 mt-2">
-               <p className="text-[#0ea5e9] font-medium text-lg">{client.name}</p>
-               {client.tax_id && <span className="text-[#94a3b8] text-sm">| {client.tax_id}</span>}
+            <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">Resumen de Cuenta</h1>
+            <div className="mt-2 flex items-center space-x-3">
+               <p className="text-lg font-medium text-accent">{client.name}</p>
+               {client.tax_id && <span className="text-sm text-muted">| {client.tax_id}</span>}
             </div>
           </div>
         </div>
-        
-        <div className="flex space-x-3 items-end">
-          <div className="glass-panel px-4 py-2 rounded-xl flex space-x-4 border-[#334155]/50">
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex space-x-4 rounded-xl border border-line bg-surface px-4 py-2">
              <div>
-               <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1">Desde</label>
-               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-[#d1dded] text-sm focus:outline-none" />
+               <label className="mb-1 block text-[10px] font-bold uppercase text-faint">Desde</label>
+               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-sm text-ink focus:outline-none" />
              </div>
-             <div className="w-px h-8 bg-[#334155]/50 self-center"></div>
+             <div className="h-8 w-px self-center bg-line"></div>
              <div>
-               <label className="block text-[10px] uppercase font-bold text-[#64748b] mb-1">Hasta</label>
-               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-[#d1dded] text-sm focus:outline-none" />
+               <label className="mb-1 block text-[10px] font-bold uppercase text-faint">Hasta</label>
+               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-sm text-ink focus:outline-none" />
              </div>
           </div>
-          <button onClick={exportClientPdf} className="bg-[#4d596b] hover:bg-[#677383] text-white px-4 py-3 rounded-xl font-medium transition-colors border border-[#7e8b9d] shadow-lg">
+          <button onClick={exportClientPdf} className="rounded-xl border border-line bg-surface px-4 py-3 font-medium text-ink-soft shadow-sm transition-colors hover:bg-track">
              📄 Exportar PDF
           </button>
-          <button onClick={exportClientExcel} className="bg-emerald-800/40 hover:bg-emerald-700/50 text-emerald-300 px-4 py-3 rounded-xl font-medium transition-colors border border-emerald-600/40 shadow-lg">
+          <button onClick={exportClientExcel} className="rounded-xl border border-positive/20 bg-positive-bg px-4 py-3 font-medium text-positive shadow-sm transition-colors hover:opacity-80">
              📊 Exportar Excel
           </button>
-          <button onClick={() => setShowOBModal(true)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-4 py-3 rounded-xl font-medium transition-colors border border-emerald-500/20 shadow-lg">
+          <button onClick={() => setShowOBModal(true)} className="rounded-xl border border-positive/20 bg-positive-bg px-4 py-3 font-medium text-positive shadow-sm transition-colors hover:opacity-80">
              + Saldo Inicial
           </button>
-          <button onClick={() => setShowAdjModal(true)} className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 px-4 py-3 rounded-xl font-medium transition-colors border border-amber-500/20 shadow-lg">
+          <button onClick={() => setShowAdjModal(true)} className="rounded-xl border border-warn/20 bg-warn-bg px-4 py-3 font-medium text-warn shadow-sm transition-colors hover:opacity-80">
              ± Ajuste
           </button>
-          <button onClick={openEditModal} className="bg-black/20 hover:bg-black/40 text-[#aab6c7] hover:text-white px-4 py-3 rounded-xl font-medium transition-colors border border-[#334155]/50 shadow-lg">
+          <button onClick={openEditModal} className="rounded-xl border border-line bg-surface px-4 py-3 font-medium text-muted shadow-sm transition-colors hover:bg-track hover:text-ink">
              ✏️ Editar Info
           </button>
         </div>
@@ -689,77 +687,76 @@ export default function ClientProfilePage() {
         const usdBal   = usdLedger.closingBalance;
         const netARS   = checkBal + arsBal;
         return (
-          <div className="glass-panel rounded-2xl px-6 py-4 mb-6 border border-[#334155]/50 flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[160px]">
-              <p className="text-[10px] uppercase font-bold text-[#64748b] mb-0.5 tracking-wider">Saldo Cheques</p>
-              <p className={`text-xl font-bold ${checkBal >= 0 ? 'text-violet-400' : 'text-red-400'}`}>
+          <Card className="mb-6 flex flex-wrap items-center gap-4 px-6 py-4">
+            <div className="min-w-[160px] flex-1">
+              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-faint">Saldo Cheques</p>
+              <p className={`text-xl font-bold ${checkBal >= 0 ? 'text-accent' : 'text-negative'}`}>
                 $ {checkBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="text-[#334155] text-2xl font-thin">+</div>
-            <div className="flex-1 min-w-[160px]">
-              <p className="text-[10px] uppercase font-bold text-[#64748b] mb-0.5 tracking-wider">Saldo ARS</p>
-              <p className={`text-xl font-bold ${arsBal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className="text-2xl font-thin text-line-hover">+</div>
+            <div className="min-w-[160px] flex-1">
+              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-faint">Saldo ARS</p>
+              <p className={`text-xl font-bold ${arsBal >= 0 ? 'text-positive' : 'text-negative'}`}>
                 $ {arsBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="w-px h-10 bg-[#334155]/50 self-center"></div>
-            <div className="flex-1 min-w-[200px]">
-              <p className="text-[10px] uppercase font-bold text-[#64748b] mb-0.5 tracking-wider">Subtotal ARS + Cheques</p>
-              <p className={`text-2xl font-extrabold ${netARS >= 0 ? 'text-emerald-300' : 'text-red-400'}`}>
+            <div className="h-10 w-px self-center bg-line"></div>
+            <div className="min-w-[200px] flex-1">
+              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-faint">Subtotal ARS + Cheques</p>
+              <p className={`text-2xl font-extrabold ${netARS >= 0 ? 'text-positive' : 'text-negative'}`}>
                 $ {netARS.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
             {(usdBal !== 0) && (
               <>
-                <div className="w-px h-10 bg-[#334155]/50 self-center"></div>
-                <div className="flex-1 min-w-[160px]">
-                  <p className="text-[10px] uppercase font-bold text-[#64748b] mb-0.5 tracking-wider">Saldo USD</p>
-                  <p className={`text-xl font-bold ${usdBal >= 0 ? 'text-sky-400' : 'text-red-400'}`}>
+                <div className="h-10 w-px self-center bg-line"></div>
+                <div className="min-w-[160px] flex-1">
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-faint">Saldo USD</p>
+                  <p className={`text-xl font-bold ${usdBal >= 0 ? 'text-ink' : 'text-negative'}`}>
                     U$S {usdBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </>
             )}
-          </div>
+          </Card>
         );
       })()}
 
       {/* PENDING CHECKS — awaiting settlement */}
       {client.destination_checks && client.destination_checks.length > 0 && (
-        <section className="glass-panel rounded-2xl p-6 mb-6 border border-amber-500/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-[80px] bg-amber-500/5 pointer-events-none"></div>
-          <div className="flex items-center gap-3 mb-5 relative z-10">
-            <span className="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b] animate-pulse"></span>
-            <h2 className="text-lg font-bold text-[#f8fafc]">Cheques entregados al cliente</h2>
-            <span className="px-2 py-0.5 bg-amber-500/15 border border-amber-500/30 rounded-full text-amber-300 text-xs font-bold">{client.destination_checks.length}</span>
+        <Card className="mb-6 p-6">
+          <div className="mb-5 flex items-center gap-3">
+            <span className="h-3 w-3 rounded-full bg-warn"></span>
+            <h2 className="text-lg font-bold text-ink">Cheques entregados al cliente</h2>
+            <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-bold text-warn">{client.destination_checks.length}</span>
           </div>
-          <div className="overflow-x-auto relative z-10">
-            <table className="w-full text-left border-collapse text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="text-[#64748b] text-xs uppercase tracking-wider border-b border-[#334155]/30">
-                  <th className="pb-3 px-3 font-semibold">Banco</th>
-                  <th className="pb-3 px-3 font-semibold">N° Cheque</th>
-                  <th className="pb-3 px-3 font-semibold">Vencimiento</th>
-                  <th className="pb-3 px-3 font-semibold text-right">Monto</th>
-                  <th className="pb-3 px-3 font-semibold">Vendedor</th>
-                  <th className="pb-3 px-3 font-semibold text-center">Acción</th>
+                <tr className="border-b border-line text-xs uppercase tracking-wider text-faint">
+                  <th className="px-3 pb-3 font-semibold">Banco</th>
+                  <th className="px-3 pb-3 font-semibold">N° Cheque</th>
+                  <th className="px-3 pb-3 font-semibold">Vencimiento</th>
+                  <th className="px-3 pb-3 text-right font-semibold">Monto</th>
+                  <th className="px-3 pb-3 font-semibold">Vendedor</th>
+                  <th className="px-3 pb-3 text-center font-semibold">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {client.destination_checks.slice(0, destChecksVisible).map((ch: any) => (
-                  <tr key={ch.id} className="border-b border-[#334155]/20 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-3 text-[#d1dded]">{ch.bank_name}</td>
-                    <td className="py-3 px-3 font-mono text-[#94a3b8]">{ch.check_number}</td>
-                    <td className="py-3 px-3 text-[#94a3b8]">{new Date(ch.due_date).toLocaleDateString('es-AR')}</td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-400">$ {Number(ch.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
-                    <td className="py-3 px-3 text-xs text-[#64748b]">{ch.source_client?.name || <span className="italic">—</span>}</td>
-                    <td className="py-3 px-3">
+                  <tr key={ch.id} className="border-b border-line transition-colors hover:bg-row-hover">
+                    <td className="px-3 py-3 text-ink">{ch.bank_name}</td>
+                    <td className="px-3 py-3 font-mono text-muted">{ch.check_number}</td>
+                    <td className="px-3 py-3 text-muted">{new Date(ch.due_date).toLocaleDateString('es-AR')}</td>
+                    <td className="px-3 py-3 text-right font-bold text-positive">$ {Number(ch.amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-3 text-xs text-faint">{ch.source_client?.name || <span className="italic">—</span>}</td>
+                    <td className="px-3 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleReturnCheck(ch.id)}
                           disabled={checkActionLoading === ch.id}
-                          className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+                          className="rounded-lg border border-negative/30 bg-negative-bg px-3 py-1.5 text-xs font-bold text-negative transition-all hover:opacity-80 disabled:opacity-50"
                         >
                           {checkActionLoading === ch.id ? '...' : '✕ Rechazar'}
                         </button>
@@ -771,117 +768,115 @@ export default function ClientProfilePage() {
             </table>
           </div>
           {destChecksVisible < client.destination_checks.length && (
-            <div className="flex justify-center mt-4 relative z-10">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={() => setDestChecksVisible(prev => prev + 10)}
-                className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/20 rounded-lg text-sm font-medium transition-all"
+                className="rounded-lg border border-warn/20 bg-warn-bg px-4 py-2 text-sm font-medium text-warn transition-all hover:opacity-80"
               >
                 Ver más ({client.destination_checks.length - destChecksVisible} restantes)
               </button>
             </div>
           )}
-        </section>
+        </Card>
       )}
 
       {/* CHECKS LEDGER */}
-      <section className="glass-panel rounded-2xl p-6 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-purple-500/5 pointer-events-none"></div>
-        <div className="flex justify-between items-end mb-6 border-b border-[#334155]/50 pb-4 relative z-10">
-           <h2 className="text-xl font-bold text-[#f8fafc] flex items-center gap-2">
-             <span className="w-3 h-3 rounded-full bg-purple-400 shadow-[0_0_10px_#a855f7]"></span>
+      <Card className="mb-8 p-6">
+        <div className="mb-6 flex items-end justify-between border-b border-line pb-4">
+           <h2 className="flex items-center gap-2 text-xl font-bold text-ink">
+             <span className="h-3 w-3 rounded-full bg-accent"></span>
              Sub-Libro Cheques (Valores de Terceros)
            </h2>
            <div className="text-right">
-             <p className="text-sm text-[#94a3b8] mb-1">Saldo en Cartera</p>
-             <p className={`text-2xl font-bold ${checksLedger.closingBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+             <p className="mb-1 text-sm text-muted">Saldo en Cartera</p>
+             <p className={`text-2xl font-bold ${checksLedger.closingBalance >= 0 ? 'text-positive' : 'text-negative'}`}>
                 $ {checksLedger.closingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
              </p>
            </div>
         </div>
-        
-        <div className="overflow-x-auto relative z-10">
-          <table className="w-full text-left border-collapse">
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="text-[#64748b] text-xs uppercase tracking-wider border-b border-[#334155]/30">
-                <th className="pb-3 px-2 font-semibold">Fecha</th>
-                <th className="pb-3 px-2 font-semibold">Comprobante</th>
-                <th className="pb-3 px-2 font-semibold">Concepto</th>
-                <th className="pb-3 px-2 font-semibold text-right">Importe Nominal</th>
-                <th className="pb-3 px-2 font-semibold text-right">Saldo Combinado</th>
+              <tr className="border-b border-line text-xs uppercase tracking-wider text-faint">
+                <th className="px-2 pb-3 font-semibold">Fecha</th>
+                <th className="px-2 pb-3 font-semibold">Comprobante</th>
+                <th className="px-2 pb-3 font-semibold">Concepto</th>
+                <th className="px-2 pb-3 text-right font-semibold">Importe Nominal</th>
+                <th className="px-2 pb-3 text-right font-semibold">Saldo Combinado</th>
               </tr>
             </thead>
-            <tbody className="text-sm text-[#d1dded]">
-              <tr className="border-b border-[#334155]/10 bg-[#081329]/30">
-                 <td className="py-3 px-2 text-[#64748b]">{startDate && new Date(startDate).toLocaleDateString()}</td>
-                 <td className="py-3 px-2"></td>
-                 <td className="py-3 px-2 font-medium italic text-[#94a3b8]">Saldo Inicial (Arrastre)</td>
-                 <td className="py-3 px-2 text-right"></td>
-                 <td className="py-3 px-2 text-right font-medium text-[#f8fafc]">$ {checksLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <tbody className="text-sm text-ink">
+              <tr className="border-b border-line bg-canvas">
+                 <td className="px-2 py-3 text-faint">{startDate && new Date(startDate).toLocaleDateString()}</td>
+                 <td className="px-2 py-3"></td>
+                 <td className="px-2 py-3 font-medium italic text-muted">Saldo Inicial (Arrastre)</td>
+                 <td className="px-2 py-3 text-right"></td>
+                 <td className="px-2 py-3 text-right font-medium text-ink">$ {checksLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
               </tr>
-              
+
               {checksLedger.rows.slice(0, checksVisible).map((row: any) => (
-                <tr key={row.id} className="border-b border-[#334155]/30 hover:bg-white/[0.02] transition-colors">
-                  <td className="py-3 px-2 whitespace-nowrap">{new Date(row.created_at).toLocaleDateString()}</td>
-                  <td className="py-3 px-2 text-[#94a3b8] font-mono text-xs">{row.transaction.id.split('-')[0].toUpperCase()}</td>
-                  <td className="py-3 px-2">{row.transaction.description}</td>
-                  <td className={`py-3 px-2 text-right font-medium ${row.effect > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <tr key={row.id} className="border-b border-line transition-colors hover:bg-row-hover">
+                  <td className="whitespace-nowrap px-2 py-3">{new Date(row.created_at).toLocaleDateString()}</td>
+                  <td className="px-2 py-3 font-mono text-xs text-muted">{row.transaction.id.split('-')[0].toUpperCase()}</td>
+                  <td className="px-2 py-3">{row.transaction.description}</td>
+                  <td className={`px-2 py-3 text-right font-medium ${row.effect > 0 ? 'text-positive' : 'text-negative'}`}>
                     {row.effect > 0 ? '+' : ''}{row.effect.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="py-3 px-2 text-right font-bold text-[#f8fafc]">$ {row.runningBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-2 py-3 text-right font-bold text-ink">$ {row.runningBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 </tr>
               ))}
               {checksLedger.rows.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center text-[#64748b]">Sin movimientos de cheques en este período.</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-faint">Sin movimientos de cheques en este período.</td></tr>
               )}
             </tbody>
           </table>
           {checksVisible < checksLedger.rows.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setChecksVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setChecksVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({checksLedger.rows.length - checksVisible} restantes)
               </button>
             </div>
           )}
         </div>
-      </section>
+      </Card>
 
       {/* ARS LEDGER */}
-      <section className="glass-panel rounded-2xl p-6 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-[#0ea5e9]/5 pointer-events-none"></div>
-        <div className="flex justify-between items-end mb-6 border-b border-[#334155]/50 pb-4 relative z-10">
-           <h2 className="text-xl font-bold text-[#f8fafc] flex items-center gap-2">
-             <span className="w-3 h-3 rounded-full bg-[#0ea5e9] shadow-[0_0_10px_#0ea5e9]"></span>
+      <Card className="mb-8 p-6">
+        <div className="mb-6 flex items-end justify-between border-b border-line pb-4">
+           <h2 className="flex items-center gap-2 text-xl font-bold text-ink">
+             <span className="h-3 w-3 rounded-full bg-accent"></span>
              Sub-Libro ARS (Pesos, Cobros y Pagos)
            </h2>
            <div className="text-right">
-             <p className="text-sm text-[#94a3b8] mb-1">Saldo Final del Período</p>
-             <p className={`text-2xl font-bold ${arsLedger.closingBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+             <p className="mb-1 text-sm text-muted">Saldo Final del Período</p>
+             <p className={`text-2xl font-bold ${arsLedger.closingBalance >= 0 ? 'text-positive' : 'text-negative'}`}>
                 $ {arsLedger.closingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
              </p>
            </div>
         </div>
-        
-        <div className="overflow-x-auto relative z-10">
-          <table className="w-full text-left border-collapse">
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="text-[#64748b] text-xs uppercase tracking-wider border-b border-[#334155]/30">
-                <th className="pb-3 px-2 font-semibold">Fecha</th>
-                <th className="pb-3 px-2 font-semibold">Comprobante</th>
-                <th className="pb-3 px-2 font-semibold">Concepto</th>
-                <th className="pb-3 px-2 font-semibold text-right">Importe</th>
-                <th className="pb-3 px-2 font-semibold text-right">Saldo</th>
+              <tr className="border-b border-line text-xs uppercase tracking-wider text-faint">
+                <th className="px-2 pb-3 font-semibold">Fecha</th>
+                <th className="px-2 pb-3 font-semibold">Comprobante</th>
+                <th className="px-2 pb-3 font-semibold">Concepto</th>
+                <th className="px-2 pb-3 text-right font-semibold">Importe</th>
+                <th className="px-2 pb-3 text-right font-semibold">Saldo</th>
               </tr>
             </thead>
-            <tbody className="text-sm text-[#d1dded]">
+            <tbody className="text-sm text-ink">
               {/* Initial Balance Row */}
-              <tr className="border-b border-[#334155]/10 bg-[#081329]/30">
-                 <td className="py-3 px-2 text-[#64748b]">{startDate && new Date(startDate).toLocaleDateString()}</td>
-                 <td className="py-3 px-2"></td>
-                 <td className="py-3 px-2 font-medium italic text-[#94a3b8]">Saldo Inicial (Arrastre)</td>
-                 <td className="py-3 px-2 text-right"></td>
-                 <td className="py-3 px-2 text-right font-medium text-[#f8fafc]">$ {arsLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+              <tr className="border-b border-line bg-canvas">
+                 <td className="px-2 py-3 text-faint">{startDate && new Date(startDate).toLocaleDateString()}</td>
+                 <td className="px-2 py-3"></td>
+                 <td className="px-2 py-3 font-medium italic text-muted">Saldo Inicial (Arrastre)</td>
+                 <td className="px-2 py-3 text-right"></td>
+                 <td className="px-2 py-3 text-right font-medium text-ink">$ {arsLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
               </tr>
-              
+
               {arsLedger.rows.slice(0, arsVisible).map((row: any) => {
                 // Detectar fila de comisión: en una transacción CHECK_TRADE con 2 movimientos
                 // (nominal + comisión), la comisión es siempre el de MENOR monto.
@@ -895,101 +890,100 @@ export default function ClientProfilePage() {
                     Number(r.amount) > Number(row.amount)
                   );
                 return (
-                  <tr key={row.id} className="border-b border-[#334155]/30 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-2 whitespace-nowrap">{new Date(row.created_at).toLocaleDateString()}</td>
-                    <td className="py-3 px-2 text-[#94a3b8] font-mono text-xs">{row.transaction.id.split('-')[0].toUpperCase()}</td>
-                    <td className="py-3 px-2">
+                  <tr key={row.id} className="border-b border-line transition-colors hover:bg-row-hover">
+                    <td className="whitespace-nowrap px-2 py-3">{new Date(row.created_at).toLocaleDateString()}</td>
+                    <td className="px-2 py-3 font-mono text-xs text-muted">{row.transaction.id.split('-')[0].toUpperCase()}</td>
+                    <td className="px-2 py-3">
                       {isCommissionRow
-                        ? <><span className="text-amber-400 font-medium">Comisión</span><span className="text-[#64748b] ml-2 text-xs">({row.transaction.description})</span></>
+                        ? <><span className="font-medium text-warn">Comisión</span><span className="ml-2 text-xs text-faint">({row.transaction.description})</span></>
                         : row.transaction.description}
                     </td>
-                    <td className={`py-3 px-2 text-right font-medium ${row.effect > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <td className={`px-2 py-3 text-right font-medium ${row.effect > 0 ? 'text-positive' : 'text-negative'}`}>
                       {row.effect > 0 ? '+' : ''}{row.effect.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3 px-2 text-right font-bold text-[#f8fafc]">
+                    <td className="px-2 py-3 text-right font-bold text-ink">
                       {`$ ${row.runningBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                     </td>
                   </tr>
                 );
               })}
               {arsLedger.rows.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center text-[#64748b]">Sin movimientos ARS en este período.</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-faint">Sin movimientos ARS en este período.</td></tr>
               )}
             </tbody>
           </table>
           {arsVisible < arsLedger.rows.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setArsVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setArsVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({arsLedger.rows.length - arsVisible} restantes)
               </button>
             </div>
           )}
         </div>
-      </section>
+      </Card>
 
       {/* USD LEDGER */}
-      <section className="glass-panel rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] bg-emerald-500/5 pointer-events-none"></div>
-        <div className="flex justify-between items-end mb-6 border-b border-[#334155]/50 pb-4 relative z-10">
-           <h2 className="text-xl font-bold text-[#f8fafc] flex items-center gap-2">
-             <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></span>
+      <Card className="p-6">
+        <div className="mb-6 flex items-end justify-between border-b border-line pb-4">
+           <h2 className="flex items-center gap-2 text-xl font-bold text-ink">
+             <span className="h-3 w-3 rounded-full bg-positive"></span>
              Sub-Libro USD (Dólares Físicos/Transf)
            </h2>
            <div className="text-right">
-             <p className="text-sm text-[#94a3b8] mb-1">Saldo Final del Período</p>
-             <p className={`text-2xl font-bold ${usdLedger.closingBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+             <p className="mb-1 text-sm text-muted">Saldo Final del Período</p>
+             <p className={`text-2xl font-bold ${usdLedger.closingBalance >= 0 ? 'text-positive' : 'text-negative'}`}>
                 U$S {usdLedger.closingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
              </p>
            </div>
         </div>
-        
-        <div className="overflow-x-auto relative z-10">
-          <table className="w-full text-left border-collapse">
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="text-[#64748b] text-xs uppercase tracking-wider border-b border-[#334155]/30">
-                <th className="pb-3 px-2 font-semibold">Fecha</th>
-                <th className="pb-3 px-2 font-semibold">Comprobante</th>
-                <th className="pb-3 px-2 font-semibold">Concepto</th>
-                <th className="pb-3 px-2 font-semibold text-right">Importe</th>
-                <th className="pb-3 px-2 font-semibold text-right">Saldo</th>
+              <tr className="border-b border-line text-xs uppercase tracking-wider text-faint">
+                <th className="px-2 pb-3 font-semibold">Fecha</th>
+                <th className="px-2 pb-3 font-semibold">Comprobante</th>
+                <th className="px-2 pb-3 font-semibold">Concepto</th>
+                <th className="px-2 pb-3 text-right font-semibold">Importe</th>
+                <th className="px-2 pb-3 text-right font-semibold">Saldo</th>
               </tr>
             </thead>
-            <tbody className="text-sm text-[#d1dded]">
-              <tr className="border-b border-[#334155]/10 bg-[#081329]/30">
-                 <td className="py-3 px-2 text-[#64748b]">{startDate && new Date(startDate).toLocaleDateString()}</td>
-                 <td className="py-3 px-2"></td>
-                 <td className="py-3 px-2 font-medium italic text-[#94a3b8]">Saldo Inicial (Arrastre)</td>
-                 <td className="py-3 px-2 text-right"></td>
-                 <td className="py-3 px-2 text-right font-medium text-[#f8fafc]">U$S {usdLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <tbody className="text-sm text-ink">
+              <tr className="border-b border-line bg-canvas">
+                 <td className="px-2 py-3 text-faint">{startDate && new Date(startDate).toLocaleDateString()}</td>
+                 <td className="px-2 py-3"></td>
+                 <td className="px-2 py-3 font-medium italic text-muted">Saldo Inicial (Arrastre)</td>
+                 <td className="px-2 py-3 text-right"></td>
+                 <td className="px-2 py-3 text-right font-medium text-ink">U$S {usdLedger.initialBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
               </tr>
-              
+
               {usdLedger.rows.slice(0, usdVisible).map((row: any) => (
-                <tr key={row.id} className="border-b border-[#334155]/30 hover:bg-white/[0.02] transition-colors">
-                  <td className="py-3 px-2 whitespace-nowrap">{new Date(row.created_at).toLocaleDateString()}</td>
-                  <td className="py-3 px-2 text-[#94a3b8] font-mono text-xs">{row.transaction.id.split('-')[0].toUpperCase()}</td>
-                  <td className="py-3 px-2">{row.transaction.description}</td>
-                  <td className={`py-3 px-2 text-right font-medium ${row.effect > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <tr key={row.id} className="border-b border-line transition-colors hover:bg-row-hover">
+                  <td className="whitespace-nowrap px-2 py-3">{new Date(row.created_at).toLocaleDateString()}</td>
+                  <td className="px-2 py-3 font-mono text-xs text-muted">{row.transaction.id.split('-')[0].toUpperCase()}</td>
+                  <td className="px-2 py-3">{row.transaction.description}</td>
+                  <td className={`px-2 py-3 text-right font-medium ${row.effect > 0 ? 'text-positive' : 'text-negative'}`}>
                     {row.effect > 0 ? '+' : ''}{row.effect.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="py-3 px-2 text-right font-bold text-[#f8fafc]">
+                  <td className="px-2 py-3 text-right font-bold text-ink">
                     {`U$S ${row.runningBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                   </td>
                 </tr>
               ))}
               {usdLedger.rows.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center text-[#64748b]">Sin movimientos USD en este período.</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-faint">Sin movimientos USD en este período.</td></tr>
               )}
             </tbody>
           </table>
           {usdVisible < usdLedger.rows.length && (
-            <div className="p-4 text-center border-t border-[#334155]/30">
-              <button onClick={() => setUsdVisible(v => v + 10)} className="text-sm text-[#0ea5e9] hover:text-[#38bdf8] font-medium transition-colors">
+            <div className="border-t border-line p-4 text-center">
+              <button onClick={() => setUsdVisible(v => v + 10)} className="text-sm font-medium text-accent transition-colors hover:underline">
                 Ver más ({usdLedger.rows.length - usdVisible} restantes)
               </button>
             </div>
           )}
         </div>
-      </section>
+      </Card>
 
     </div>
   );
