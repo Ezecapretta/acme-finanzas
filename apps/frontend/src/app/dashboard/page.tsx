@@ -117,7 +117,7 @@ export default function DashboardPage() {
   const sumEgresos = data?.chartData.reduce((acc, c) => acc + c.Egresos, 0) ?? 0;
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div className="mx-auto max-w-[1180px] animate-in fade-in duration-500">
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <header className="mb-[26px] flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -96,7 +96,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        <div className="mx-auto max-w-[1180px] px-5 py-6 md:px-10 md:pt-[30px] md:pb-14">
+        {/* El ancho máximo lo define cada página (el dashboard usa 1180px;
+            las vistas con tablas densas usan más). */}
+        <div className="px-5 py-6 md:px-10 md:pt-[30px] md:pb-14">
           {children}
         </div>
       </main>
